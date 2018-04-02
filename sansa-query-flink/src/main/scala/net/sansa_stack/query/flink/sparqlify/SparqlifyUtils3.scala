@@ -41,9 +41,11 @@ object SparqlifyUtils3
       logger.debug("Processing RdfPartition: " + p)
       val vd = SparqlifyUtils2.createViewDefinition(p)
       logger.debug("Created view definition: " + vd)
-      val tableName = vd.getRelation match {
-        case o: SqlOpTable => o.getTableName
-        case _ => throw new RuntimeException("Table name required - instead got: " + vd)
+      val tableName = vd.getLogicalTable.tryGetTableName().orElse(null)
+      
+      // TODO Switch to orElseThrow (but i couldn't find out how to create a java.util.Supplier from scala 
+      if(tableName == null) {
+        throw new RuntimeException("Table name required - instead got: " + vd)
       }
       val q = p.layout.schema
       q match {

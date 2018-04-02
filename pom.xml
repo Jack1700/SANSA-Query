@@ -266,6 +266,46 @@
 			</dependency>
 
 
+			<!-- Tinkerpop -->
+
+			<!-- Fixing jackson version as Tinkerepops more recent version conflicts with Spark -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>2.6.5</version>						
+			</dependency>
+
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>2.6.5</version>						
+			</dependency>
+
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
+				<version>2.6.5</version>						
+			</dependency>
+
+			<dependency>
+				<groupId>com.fasterxml.jackson.module</groupId>
+				<artifactId>jackson-module-scala_2.11</artifactId>
+				<version>2.6.5</version>						
+			</dependency>
+
+
+			<dependency>
+				<groupId>org.apache.tinkerpop</groupId>
+				<artifactId>spark-gremlin</artifactId>
+				<version>3.3.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.github.litmus-benchmark-suite</groupId>
+				<artifactId>gremlinator</artifactId>
+				<version>1.0</version>
+			</dependency>
+
 			<!-- Benchmarking bsbm and visualization of the results -->
 			<dependency>
 				<groupId>org.aksw.bsbm</groupId>
@@ -297,7 +337,7 @@
 			<dependency>
 				<groupId>org.aksw.sparqlify</groupId>
 				<artifactId>sparqlify-core</artifactId>
-				<version>0.8.3</version>
+				<version>0.8.4-SNAPSHOT</version>
 				<exclusions>
 					<exclusion>
 						<groupId>org.aksw.sparqlify</groupId>
@@ -313,6 +353,12 @@
 					</exclusion>
 				</exclusions>
 			</dependency>
+
+			<dependency>
+				<groupId>org.aksw.sparqlify</groupId>
+				<artifactId>sparqlify-r2rml-exporter</artifactId>
+				<version>0.8.4-SNAPSHOT</version>
+            </dependency>
 
 			<dependency>
 				<groupId>org.aksw.jena-sparql-api</groupId>
@@ -343,6 +389,14 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</reporting>
 
 	<build>
 		<plugins>
@@ -369,11 +423,6 @@
 			<plugin>
 				<groupId>net.alchim31.maven</groupId>
 				<artifactId>scala-maven-plugin</artifactId>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-site-plugin</artifactId>
 			</plugin>
 
 			<plugin>
@@ -489,24 +538,6 @@
 					<configuration>
 						<scalaVersion>${scala.version}</scalaVersion>
 						<recompileMode>incremental</recompileMode>
-					</configuration>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-site-plugin</artifactId>
-					<version>3.6</version>
-					<configuration>
-						<reportPlugins>
-							<plugin>
-								<artifactId>maven-project-info-reports-plugin</artifactId>
-								<version>2.9</version>
-							</plugin>
-							<plugin>
-								<groupId>net.alchim31.maven</groupId>
-								<artifactId>scala-maven-plugin</artifactId>
-							</plugin>
-						</reportPlugins>
 					</configuration>
 				</plugin>
 

@@ -26,21 +26,10 @@ import com.typesafe.scalalogging.StrictLogging
 object SparqlifyUtils3
   extends StrictLogging
 {
-  def createSparqlSqlRewriter(sparkSession: SparkSession, partitions: Map[RdfPartitionDefault, RDD[Row]]): SparqlSqlStringRewriter = {
-    val config = new Config()
-    val loggerCount = new LoggerCount(logger.underlying)
-
-
-    val backendConfig = new SqlBackendConfig(new DatatypeToStringCast(), new SqlEscaperBase("`", "`")) //new SqlEscaperBacktick())
-    val sqlEscaper = backendConfig.getSqlEscaper()
-    val typeSerializer = backendConfig.getTypeSerializer()
-
-
-    val ers = SparqlifyUtils.createDefaultExprRewriteSystem()
-    val mappingOps = SparqlifyUtils.createDefaultMappingOps(ers)
-
-
-    val candidateViewSelector = new CandidateViewSelectorSparqlify(mappingOps, new ViewDefinitionNormalizerImpl());
+  val sqlEscaper = new SqlEscaperBase("`", "`")
+  
+  def createViewDefinitionsFromPartitions(sparkSession: SparkSession, partitions: Map[_ <: RdfPartitionDefault, RDD[Row]]) = {
+    val result = new Config()
 
     val views = partitions.map {
       case (p, rdd) =>
@@ -50,9 +39,15 @@ object SparqlifyUtils3
         val vd = SparqlifyUtils2.createViewDefinition(p)
         logger.debug("Created view definition: " + vd)
         
-        val tableName = vd.getRelation match {
-          case o: SqlOpTable => o.getTableName
-          case _ => throw new RuntimeException("Table name required - instead got: " + vd)
+//        val tableName = vd.getRelation match {
+//          case o: SqlOpTable => o.getTableName
+//          case _ => throw new RuntimeException("Table name required - instead got: " + vd)
+//        }
+        val tableName = vd.getLogicalTable.tryGetTableName().orElse(null)
+      
+        // TODO Switch to orElseThrow (but i couldn't find out how to create a java.util.Supplier from scala 
+        if(tableName == null) {
+            throw new RuntimeException("Table name required - instead got: " + vd)
         }
 
         val scalaSchema = p.layout.schema
@@ -60,8 +55,15 @@ object SparqlifyUtils3
         val df = sparkSession.createDataFrame(rdd, sparkSchema)
 
         df.createOrReplaceTempView(sqlEscaper.escapeTableName(tableName))
-        config.getViewDefinitions.add(vd)
+        result.getViewDefinitions.add(vd)
     }
+    result
+  }
+  
+  def createSparqlSqlRewriter(sparkSession: SparkSession, config: Config): SparqlSqlStringRewriter = {
+    val backendConfig = new SqlBackendConfig(new DatatypeToStringCast(), sqlEscaper) //new SqlEscaperBacktick())
+    //val sqlEscaper = backendConfig.getSqlEscaper()
+    val typeSerializer = backendConfig.getTypeSerializer()
 
     val basicTableInfoProvider = new BasicTableInfoProviderSpark(sparkSession)
 
@@ -69,6 +71,20 @@ object SparqlifyUtils3
     //val rewrite = rewriter.rewrite(QueryFactory.create("Select * { <http://dbpedia.org/resource/Guy_de_Maupassant> ?p ?o }"))
 
 //    val rewrite = rewriter.rewrite(QueryFactory.create("Select * { ?s <http://xmlns.com/foaf/0.1/givenName> ?o ; <http://dbpedia.org/ontology/deathPlace> ?d }"))
+    rewriter
+  }
+  
+  def createSparqlSqlRewriter(sparkSession: SparkSession, partitions: Map[RdfPartitionDefault, RDD[Row]]): SparqlSqlStringRewriter = {
+
+    val config = createViewDefinitionsFromPartitions(sparkSession, partitions)
+    val rewriter = createSparqlSqlRewriter(sparkSession, config)
+    
+//    val loggerCount = new LoggerCount(logger.underlying)
+    //val ers = SparqlifyUtils.createDefaultExprRewriteSystem()
+    //val mappingOps = SparqlifyUtils.createDefaultMappingOps(ers)
+    //val candidateViewSelector = new CandidateViewSelectorSparqlify(mappingOps, new ViewDefinitionNormalizerImpl());
+
+
     rewriter
   }
 

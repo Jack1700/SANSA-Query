@@ -1,29 +1,50 @@
 package net.sansa_stack.query.spark.sparqlify.server
 
 import java.io.File
-
-import scala.collection.JavaConverters.asScalaIteratorConverter
-
-import org.aksw.sparqlify.core.sparql.RowMapperSparqlifyBinding
-import org.apache.jena.riot.RDFDataMgr
-import org.apache.jena.riot.RDFFormat
-import org.apache.jena.sparql.engine.binding.Binding
-import org.apache.jena.sparql.engine.binding.BindingHashMap
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.SparkSession
+import java.nio.file.{Files, Paths}
 
 import benchmark.generator.Generator
 import benchmark.serializer.SerializerModel
-import benchmark.testdriver.LocalSPARQLParameterPool
-import benchmark.testdriver.SPARQLConnection2
-import benchmark.testdriver.TestDriver
-import benchmark.testdriver.TestDriverUtils
-import net.sansa_stack.query.spark.sparqlify.QueryExecutionFactorySparqlifySpark
-import net.sansa_stack.query.spark.sparqlify.SparqlifyUtils3
+import benchmark.testdriver.{LocalSPARQLParameterPool, SPARQLConnection2, TestDriver, TestDriverUtils}
+import net.sansa_stack.query.spark.sparqlify.{QueryExecutionFactorySparqlifySpark, SparqlifyUtils3}
 import net.sansa_stack.rdf.spark.partition.core.RdfPartitionUtilsSpark
+import org.aksw.obda.jena.r2rml.impl.R2rmlExporter
+import org.aksw.sparqlify.config.syntax.Config
+import org.aksw.sparqlify.core.sparql.RowMapperSparqlifyBinding
+import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.riot.{RDFDataMgr, RDFFormat}
+import org.apache.jena.sparql.engine.binding.{Binding, BindingHashMap}
+import org.apache.spark.sql.{Row, SparkSession}
+
+import scala.collection.JavaConverters.{asScalaIteratorConverter, _}
+
 
 object MainSansaBSBM {
 
+  def writeOut(sparkSession: SparkSession, config: Config): Unit = {
+    for(vd <- config.getViewDefinitions.asScala) {
+      // Serialize the view definition
+      val model = ModelFactory.createDefaultModel
+      new R2rmlExporter().export(model, vd)
+
+      // Get the table name and export its contents
+      val tableName = vd.getLogicalTable.getTableName
+
+      val path = Paths.get("/tmp/" + tableName + ".r2rml")
+      Files.createDirectories(path.getParent)
+      val out = Files.newOutputStream(path)
+      RDFDataMgr.write(out, model, RDFFormat.TURTLE_PRETTY)
+      out.flush
+      out.close
+
+      val df = sparkSession.sql(s"SELECT * FROM `$tableName`")
+      
+      df.write.csv("/tmp/" + tableName + ".csv")
+      //df.write.format("com.databricks.spark.csv").option("header", "true").save("file.csv")
+    }
+    
+  }
+  
   def main(args: Array[String]): Unit = {
 
     val tempDirStr = System.getProperty("java.io.tmpdir")
@@ -73,7 +94,15 @@ object MainSansaBSBM {
     //val map = graphRdd.partitionGraphByPredicates
     val partitions = RdfPartitionUtilsSpark.partitionGraph(graphRdd)
 
-    val rewriter = SparqlifyUtils3.createSparqlSqlRewriter(sparkSession, partitions)
+    val config = SparqlifyUtils3.createViewDefinitionsFromPartitions(sparkSession, partitions)
+    
+    writeOut(sparkSession, config)
+    
+    if(true) {
+      return
+    }
+    
+    val rewriter = SparqlifyUtils3.createSparqlSqlRewriter(sparkSession, config)
 
     val qef = new QueryExecutionFactorySparqlifySpark(sparkSession, rewriter)
 
