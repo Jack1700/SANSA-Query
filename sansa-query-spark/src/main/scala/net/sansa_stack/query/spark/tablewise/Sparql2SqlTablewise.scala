@@ -58,6 +58,34 @@ class Sparql2SqlTablewise {
     }
     return variables.toString.substring(12, variables.toString.size - 1);
   }
+  
+   def Sparql2SqlTablewise(QueryString: String): String = {
+    val query = QueryFactory.create(QueryString);
+    TripleGetter.generateStringTriples(query);
+
+    val variables = cleanProjectVariables(query.getProjectVars());
+    val select = "SELECT " + variables + " ";
+    var from = "FROM\n";
+    var i = 0;
+    for (i <- 0 until TripleGetter.getSubjects().size) {
+      val subject = TripleGetter.getSubjects()(i);
+      val predicate = TripleGetter.getPredicates()(i);
+      val _object = TripleGetter.getObjects()(i);
+      var addToFrom = ""
+      if (i > 0) {
+        val lastSubject = TripleGetter.getSubjects()(i - 1);
+        val lastPredicate = TripleGetter.getPredicates()(i - 1);
+        val lastObject = TripleGetter.getObjects()(i - 1);
+        from += "\n Join \n";
+        addToFrom = "\n" + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "\n"
+      }
+      from += for1Pattern(subject, predicate, _object, i);
+      from += addToFrom
+
+    }
+    return select + from;
+
+  }
 
   def joinOn(lastSubject: String, lastPredicate: String, lastObject: String, subject: String, predicate: String, _object: String,
              tableNum1: Int, tableNum2: Int): String = {
@@ -117,32 +145,6 @@ class Sparql2SqlTablewise {
 
     return joinStatement
   }
-  def Sparql2SqlTablewise(QueryString: String): String = {
-    val query = QueryFactory.create(QueryString);
-    TripleGetter.generateStringTriples(query);
-
-    val variables = cleanProjectVariables(query.getProjectVars());
-    val select = "SELECT " + variables + " ";
-    var from = "FROM\n";
-    var i = 0;
-    for (i <- 0 until TripleGetter.getSubjects().size) {
-      val subject = TripleGetter.getSubjects()(i);
-      val predicate = TripleGetter.getPredicates()(i);
-      val _object = TripleGetter.getObjects()(i);
-      var addToFrom = ""
-      if (i > 0) {
-        val lastSubject = TripleGetter.getSubjects()(i - 1);
-        val lastPredicate = TripleGetter.getPredicates()(i - 1);
-        val lastObject = TripleGetter.getObjects()(i - 1);
-        from += "\n Join \n";
-        addToFrom = "\n" + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "\n"
-      }
-      from += for1Pattern(subject, predicate, _object, i);
-      from += addToFrom
-
-    }
-    return select + from;
-
-  }
+ 
 
 }
