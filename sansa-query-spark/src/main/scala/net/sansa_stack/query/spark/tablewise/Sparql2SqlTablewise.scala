@@ -12,7 +12,7 @@ import scala.collection.mutable.Set
 import org.apache.jena.sparql.core.Var
 import java.util.List
 
-class Sparql2Sql {
+class Sparql2SqlTablewise {
 
   def for1Pattern(subject: String, predicate: String, _object: String): String = {
     
