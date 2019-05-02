@@ -1,6 +1,5 @@
 package net.sansa_stack.query.spark.tablewise
 
-
 import org.apache.jena.sparql.core.TriplePath
 import org.apache.jena.sparql.syntax.ElementPathBlock
 import org.apache.jena.sparql.syntax.ElementVisitorBase
@@ -15,40 +14,42 @@ import java.util.List
 class Sparql2SqlTablewise {
 
   def for1Pattern(subject: String, predicate: String, _object: String): String = {
-    
+
     var beforeWhere = false;
     var select = "SELECT ";
     val from = "FROM Triples ";
     var where = "WHERE "
-    
-    
-    select+= "Triples.Subject "
+
+    select += "Triples.Subject "
     if (subject(0) == '"') {
       where += "Triples.Subject=" + subject
       beforeWhere = true
     } else {
       select += "AS " + subject + " "
-      
+
     }
-    select +=", Triples.Predicate"
+    select += ", Triples.Predicate"
     if (predicate(0) == '"') {
-      where += "Triples.Predicate=" + predicate
-      if (beforeWhere)
+      if (beforeWhere) {
         where += " And "
+      }
+      where += "Triples.Predicate=" + predicate
+
       beforeWhere = true
     } else {
-      select +=" AS " + predicate + " "
-      
-    } 
-     select+=", Triples.Object"
-     
-    if (_object(0) == '"') {
-      where += "Triples.Object=" + _object;
-      if (beforeWhere)
-        where += " And"
+      select += " AS " + predicate + " "
+
     }
-    else {
-      select+= " AS " + _object + " "
+    select += ", Triples.Object"
+
+    if (_object(0) == '"') {
+      if (beforeWhere) {
+        where += " And"
+      }
+      where += "Triples.Object=" + _object;
+
+    } else {
+      select += " AS " + _object + " "
     }
     return "(" + select + from + where + ")"
   }
@@ -85,6 +86,5 @@ class Sparql2SqlTablewise {
     return select + from;
 
   }
-
 
 }
