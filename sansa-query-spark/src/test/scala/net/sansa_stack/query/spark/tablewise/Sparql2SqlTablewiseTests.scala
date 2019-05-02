@@ -17,11 +17,8 @@ class Sparql2SqlTablewiseTests extends FunSuite with DataFrameSuiteBase {
 
     val query = getClass.getResource("/queries/Q1.sparql").getPath
     val Sparql2Sql = new Sparql2SqlTablewise()
-<<<<<<< HEAD
-    val sqlQuery = Sparql2SqlTablewise.SQLBuilder("Triples", "SELECT ?X WHERE { ?X <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature> <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature40> .}");
-=======
-    val sqlQuery = Sparql2Sql.Sparql2SqlTablewise(query);
->>>>>>> branch 'develop' of https://github.com/Jack1700/SANSA-Query.git
+    val sqlQuery = Sparql2Sql.Sparql2SqlTablewise("SELECT ?X WHERE { ?X <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature> <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature40> .}");
+
     val result = spark.sparqlDL(query, mappingsFile, configFile)
 
     val size = result.count()
