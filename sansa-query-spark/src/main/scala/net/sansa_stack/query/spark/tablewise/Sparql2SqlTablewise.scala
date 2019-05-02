@@ -17,7 +17,7 @@ class Sparql2SqlTablewise {
 
     var beforeWhere = false;
     var select = "SELECT ";
-    val from = "FROM Triples ";
+    val from = " FROM Triples ";
     var where = "WHERE "
 
     select += "Triples.Subject "
@@ -44,7 +44,7 @@ class Sparql2SqlTablewise {
 
     if (_object(0) == '"') {
       if (beforeWhere) {
-        where += " And"
+        where += " And "
       }
       where += "Triples.Object=" + _object;
 
