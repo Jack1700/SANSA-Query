@@ -1,6 +1,5 @@
 package net.sansa_stack.query.spark.tablewise
 
-
 import org.apache.jena.sparql.core.TriplePath
 import org.apache.jena.sparql.syntax.ElementPathBlock
 import org.apache.jena.sparql.syntax.ElementVisitorBase
@@ -12,7 +11,7 @@ import scala.collection.mutable.Set
 import org.apache.jena.sparql.core.Var
 import java.util.List
 
-class Sparql2Sql {
+object Test extends App {
 
   def for1Pattern(subject: String, predicate: String, _object: String): String = {
     
@@ -85,5 +84,9 @@ class Sparql2Sql {
 
   }
 
+  val QueryString = "PREFIX foaf:  <http://xmlns.com/foaf/0.1/> SELECT * WHERE {    ?person foaf:name ?name .    ?person foaf:mbox ?email .}";
+  val query = QueryFactory.create(QueryString);
+  val sqlQuery = SQLBuilder("table", QueryString);
+  println(sqlQuery);
 
 }

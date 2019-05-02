@@ -2,10 +2,13 @@ package net.sansa_stack.query.spark.tablewise
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalatest.FunSuite
+import net.sansa_stack.query.spark.tablewise.Sparql2Sql 
+import net.sansa_stack.query.spark.query._
+
+
 
 class TestDataLakeEngine extends FunSuite with DataFrameSuiteBase {
 
-  import net.sansa_stack.query.spark.query._
 
   val configFile = getClass.getResource("/config").getPath
   val mappingsFile = getClass.getResource("/mappings.ttl").getPath
@@ -13,7 +16,8 @@ class TestDataLakeEngine extends FunSuite with DataFrameSuiteBase {
   test("running BSBM Q1 should result 10") {
 
     val query = getClass.getResource("/queries/Q1.sparql").getPath
-    val sqlQuery = spark.SQLBuilder("Triples", QueryString);
+    val Sparql2Sql = new Sparql2Sql()
+    val sqlQuery = Sparql2Sql.SQLBuilder("Triples", "SELECT ?X WHERE { ?X <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature> <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature40> .}");
     val result = spark.sparqlDL(query, mappingsFile, configFile)
 
     val size = result.count()
