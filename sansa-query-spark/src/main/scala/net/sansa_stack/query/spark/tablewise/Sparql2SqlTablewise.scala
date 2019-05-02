@@ -62,9 +62,8 @@ class Sparql2SqlTablewise {
     return variables.toString.substring(12, variables.toString.size - 1);
   }
 
-  def Sarpql2SqlTablewise(QueryString: String): String = {
+  def SQLBuilder(tableName: String, QueryString: String): String = {
     val query = QueryFactory.create(QueryString);
-    var tableName = "Triples";
     TripleGetter.generateStringTriples(query);
 
     val variables = cleanProjectVariables(query.getProjectVars());

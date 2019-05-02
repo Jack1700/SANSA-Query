@@ -1,13 +1,13 @@
 package net.sansa_stack.query.spark.tablewise
 
-import org.scalatest.FunSuite
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
+import org.scalatest.FunSuite
 import net.sansa_stack.query.spark.tablewise.Sparql2SqlTablewise
 import net.sansa_stack.query.spark.query._
 
 
 
-class Sparql2SqlTablewiseTests extends FunSuite with DataFrameSuiteBase {
+class TestDataLakeEngine extends FunSuite with DataFrameSuiteBase {
 
 
   val configFile = getClass.getResource("/config").getPath
@@ -22,7 +22,7 @@ class Sparql2SqlTablewiseTests extends FunSuite with DataFrameSuiteBase {
 
     val size = result.count()
 
-    assert(10 == 10)
+    assert(size == 10)
   }
 
   test("running BSBM Q2 should result 200") {
