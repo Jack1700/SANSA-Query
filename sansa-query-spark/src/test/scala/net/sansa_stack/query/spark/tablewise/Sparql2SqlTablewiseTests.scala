@@ -18,7 +18,7 @@ class Sparql2SqlTablewiseTests extends FunSuite with DataFrameSuiteBase {
     val query = getClass.getResource("/queries/Q1.sparql").getPath
     val Sparql2Sql = new Sparql2SqlTablewise()
     val sqlQuery = Sparql2Sql.Sparql2SqlTablewise(query);
-    val result = spark.sparqlDL(query, mappingsFile, configFile)
+    val result = spark.sparqlDL(sqlQuery, mappingsFile, configFile)
 
     val size = result.count()
 
