@@ -149,5 +149,8 @@ object Test extends App {
   val query = QueryFactory.create(QueryString);
   val sqlQuery = Sparql2SqlTablewise( QueryString);
   println(sqlQuery);
+  
+  
 
+  
 }

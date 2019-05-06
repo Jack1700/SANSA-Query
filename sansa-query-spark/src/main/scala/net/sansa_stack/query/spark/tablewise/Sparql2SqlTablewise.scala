@@ -10,6 +10,9 @@ import org.apache.jena.query.{ QueryExecutionFactory, QuerySolutionMap, QueryFac
 import scala.collection.mutable.Set
 import org.apache.jena.sparql.core.Var
 import java.util.List
+import org.apache.spark.sql.SparkSession
+import org.apache.jena.query.Query
+import org.apache.spark.sql.DataFrame
 
 class Sparql2SqlTablewise {
 
@@ -17,20 +20,20 @@ class Sparql2SqlTablewise {
 
     var beforeWhere = false;
     var select = "SELECT ";
-    val from = "FROM Triples ";
-    var where = "WHERE "
+    val from = " FROM Triples ";
+    var where = " WHERE "
 
-    select += "Triples.Subject "
+    select += " Triples.s "
     if (subject(0) == '"') {
-      where += "Triples.Subject=" + subject
+      where += " Triples.s=" + subject
       beforeWhere = true
     } else {
-      select += "AS " + subject + " "
+      select += " AS " + subject + " "
 
     }
-    select += ", Triples.Predicate"
+    select += ", Triples.p "
     if (predicate(0) == '"') {
-      where += "Triples.Predicate=" + predicate
+      where += " Triples.p=" + predicate
       if (beforeWhere)
         where += " And "
       beforeWhere = true
@@ -38,12 +41,12 @@ class Sparql2SqlTablewise {
       select += " AS " + predicate + " "
 
     }
-    select += ", Triples.Object"
+    select += ", Triples.o "
 
     if (_object(0) == '"') {
-      where += "Triples.Object=" + _object;
+      where += " Triples.o= " + _object;
       if (beforeWhere)
-        where += " And"
+        where += " And "
     } else {
       select += " AS " + _object + " "
     }
@@ -58,14 +61,14 @@ class Sparql2SqlTablewise {
     }
     return variables.toString.substring(12, variables.toString.size - 1);
   }
-  
-   def Sparql2SqlTablewise(QueryString: String): String = {
+
+  def Sparql2SqlTablewise(QueryString: String): String = {
     val query = QueryFactory.create(QueryString);
     TripleGetter.generateStringTriples(query);
 
     val variables = cleanProjectVariables(query.getProjectVars());
     val select = "SELECT " + variables + " ";
-    var from = "FROM\n";
+    var from = "FROM ";
     var i = 0;
     for (i <- 0 until TripleGetter.getSubjects().size) {
       val subject = TripleGetter.getSubjects()(i);
@@ -76,8 +79,10 @@ class Sparql2SqlTablewise {
         val lastSubject = TripleGetter.getSubjects()(i - 1);
         val lastPredicate = TripleGetter.getPredicates()(i - 1);
         val lastObject = TripleGetter.getObjects()(i - 1);
-        from += "\n Join \n";
-        addToFrom = "\n" + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "\n"
+       // from += "\n Join \n";
+        // addToFrom = "\n" + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "\n"
+        from += " Join ";
+        addToFrom = "  " + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "  "
       }
       from += for1Pattern(subject, predicate, _object, i);
       from += addToFrom
@@ -145,6 +150,10 @@ class Sparql2SqlTablewise {
 
     return joinStatement
   }
- 
 
+  def createQueryExecution(spark: SparkSession, sparqlQuery: String): DataFrame = {
+    val sqlQuery = Sparql2SqlTablewise(sparqlQuery) // it will return the sql query
+    val df = spark.sql(sqlQuery)
+    df
+  }
 }
