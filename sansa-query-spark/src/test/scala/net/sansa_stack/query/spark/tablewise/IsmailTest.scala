@@ -28,9 +28,10 @@ class IsmailTest extends FunSuite with DataFrameSuiteBase {
     // our translation 
     val result = OurProgram.createQueryExecution(spark, Q1)
     // right query gives 7 back 
-    //val result = spark.sql("Select triples.s from triples where triples.p =\"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature\" AND triples.o =\"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature40\" ")
+    // val result = spark.sql("SELECT X FROM (SELECT  triples.s  AS X , triples.p , triples.o  FROM triples  WHERE  triples.p=\"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature\" And  triples.o= \"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature40\")")
     print(result.count())
     assert(result.count() == 7)
   }
+  
 
 }

@@ -20,37 +20,39 @@ class Sparql2SqlTablewise {
 
     var beforeWhere = false;
     var select = "SELECT ";
-    val from = " FROM Triples ";
+    val from = " FROM triples ";
     var where = " WHERE "
 
-    select += " Triples.s "
+    select += " triples.s "
     if (subject(0) == '"') {
-      where += " Triples.s=" + subject
+      where += " triples.s=" + subject
       beforeWhere = true
     } else {
       select += " AS " + subject + " "
 
     }
-    select += ", Triples.p "
+    select += ", triples.p "
     if (predicate(0) == '"') {
-      where += " Triples.p=" + predicate
       if (beforeWhere)
         where += " And "
+      where += " triples.p=" + predicate
+
       beforeWhere = true
     } else {
       select += " AS " + predicate + " "
 
     }
-    select += ", Triples.o "
+    select += ", triples.o "
 
     if (_object(0) == '"') {
-      where += " Triples.o= " + _object;
       if (beforeWhere)
         where += " And "
+      where += " triples.o= " + _object;
+
     } else {
       select += " AS " + _object + " "
     }
-    return "(" + select + from + where + ")" + " AS " + tableNum + " "
+    return " ( (" + select + from + where + ")" + " AS " + tableNum + " ) "
   }
 
   def cleanProjectVariables(projectVariables: List[Var]): String = {
@@ -79,7 +81,7 @@ class Sparql2SqlTablewise {
         val lastSubject = TripleGetter.getSubjects()(i - 1);
         val lastPredicate = TripleGetter.getPredicates()(i - 1);
         val lastObject = TripleGetter.getObjects()(i - 1);
-       // from += "\n Join \n";
+        // from += "\n Join \n";
         // addToFrom = "\n" + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "\n"
         from += " Join ";
         addToFrom = "  " + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "  "

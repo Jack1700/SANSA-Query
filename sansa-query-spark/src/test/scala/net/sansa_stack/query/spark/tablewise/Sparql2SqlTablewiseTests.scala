@@ -1,4 +1,4 @@
-package net.sansa_stack.query.spark.tablewise
+/*package net.sansa_stack.query.spark.tablewise
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalatest.FunSuite
@@ -77,3 +77,5 @@ class Sparql2SqlTablewiseTests extends FunSuite with DataFrameSuiteBase {
   }
 
 }
+
+*/
