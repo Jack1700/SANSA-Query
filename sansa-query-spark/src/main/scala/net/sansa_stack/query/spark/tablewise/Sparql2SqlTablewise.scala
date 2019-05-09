@@ -10,49 +10,49 @@ import org.apache.jena.query.{ QueryExecutionFactory, QuerySolutionMap, QueryFac
 import scala.collection.mutable.Set
 import org.apache.jena.sparql.core.Var
 import java.util.List
+import org.apache.spark.sql.SparkSession
+import org.apache.jena.query.Query
+import org.apache.spark.sql.DataFrame
 
 class Sparql2SqlTablewise {
 
-  def for1Pattern(subject: String, predicate: String, _object: String): String = {
+  def for1Pattern(subject: String, predicate: String, _object: String, tableNum: Int): String = {
 
     var beforeWhere = false;
     var select = "SELECT ";
-    val from = "FROM Triples ";
-    var where = "WHERE "
+    val from = " FROM triples ";
+    var where = " WHERE "
 
-    
-    select+= "Triples.Subject "
+    select += " triples.s "
     if (subject(0) == '"') {
-      where += "Triples.Subject=" + subject
+      where += " triples.s=" + subject
       beforeWhere = true
     } else {
-      select += "AS " + subject + " "
+      select += " AS " + subject + " "
 
     }
-    select += ", Triples.Predicate"
+    select += ", triples.p "
     if (predicate(0) == '"') {
-      if (beforeWhere) {
+      if (beforeWhere)
         where += " And "
-      }
-      where += "Triples.Predicate=" + predicate
+      where += " triples.p=" + predicate
 
       beforeWhere = true
     } else {
       select += " AS " + predicate + " "
 
     }
-    select += ", Triples.Object"
+    select += ", triples.o "
 
     if (_object(0) == '"') {
-      if (beforeWhere) {
-        where += " And"
-      }
-      where += "Triples.Object=" + _object;
+      if (beforeWhere)
+        where += " And "
+      where += " triples.o= " + _object;
 
     } else {
       select += " AS " + _object + " "
     }
-    return "(" + select + from + where + ")"
+    return " ( (" + select + from + where + ")" + " AS " + tableNum + " ) "
   }
 
   def cleanProjectVariables(projectVariables: List[Var]): String = {
@@ -66,26 +66,96 @@ class Sparql2SqlTablewise {
 
   def Sparql2SqlTablewise(QueryString: String): String = {
     val query = QueryFactory.create(QueryString);
-    val tableName = "Triples";
     TripleGetter.generateStringTriples(query);
 
     val variables = cleanProjectVariables(query.getProjectVars());
     val select = "SELECT " + variables + " ";
-    var from = "FROM\n";
+    var from = "FROM ";
     var i = 0;
     for (i <- 0 until TripleGetter.getSubjects().size) {
       val subject = TripleGetter.getSubjects()(i);
       val predicate = TripleGetter.getPredicates()(i);
       val _object = TripleGetter.getObjects()(i);
-      from += for1Pattern(subject, predicate, _object);
-      if (i < TripleGetter.getSubjects().size - 1) {
-        from += "\n" + "JOIN\n";
-        // TO DO : ADD JOIN CONDITION (ON)
+      var addToFrom = ""
+      if (i > 0) {
+        val lastSubject = TripleGetter.getSubjects()(i - 1);
+        val lastPredicate = TripleGetter.getPredicates()(i - 1);
+        val lastObject = TripleGetter.getObjects()(i - 1);
+        // from += "\n Join \n";
+        // addToFrom = "\n" + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "\n"
+        from += " Join ";
+        addToFrom = "  " + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "  "
       }
+      from += for1Pattern(subject, predicate, _object, i);
+      from += addToFrom
 
     }
     return select + from;
 
   }
 
+  def joinOn(lastSubject: String, lastPredicate: String, lastObject: String, subject: String, predicate: String, _object: String,
+             tableNum1: Int, tableNum2: Int): String = {
+    var joinStatement = " ON "
+    var joined = false
+    if (lastSubject(0) != '"') {
+      lastSubject match {
+        case subject   => joinStatement += tableNum1 + "." + lastSubject + "=" + tableNum2 + "." + subject + " "; joined = true;
+        case predicate => joinStatement += tableNum1 + "." + lastSubject + "=" + tableNum2 + "." + predicate + " "; joined = true;
+        case _object   => joinStatement += tableNum1 + "." + lastSubject + "=" + tableNum2 + "." + _object + " "; joined = true;
+      }
+    }
+
+    if (lastPredicate(0) != '"') {
+      lastPredicate match {
+        case subject => {
+          if (joined)
+            joinStatement += " AND "
+          joined = true;
+          joinStatement += tableNum1 + "." + lastPredicate + "=" + tableNum2 + "." + subject + " ";
+        }
+        case predicate => {
+          if (joined)
+            joinStatement += " AND "
+          joined = true;
+          joinStatement += tableNum1 + "." + lastPredicate + "=" + tableNum2 + "." + predicate + " ";
+        }
+        case _object => {
+          if (joined)
+            joinStatement += " AND "
+          joined = true;
+          joinStatement += tableNum1 + "." + lastPredicate + "=" + tableNum2 + "." + _object + " ";
+        }
+      }
+    }
+    if (lastObject(0) != '"') {
+      lastObject match {
+        case subject => {
+          if (joined)
+            joinStatement += " AND "
+          joinStatement += tableNum1 + "." + lastObject + "=" + tableNum2 + "." + subject + " ";
+        }
+        case predicate => {
+          if (joined)
+            joinStatement += " AND "
+          joinStatement += tableNum1 + "." + lastObject + "=" + tableNum2 + "." + predicate + " ";
+
+        }
+        case _object => {
+          if (joined)
+            joinStatement += " AND "
+          joinStatement += tableNum1 + "." + lastObject + "=" + tableNum2 + "." + _object + " ";
+
+        }
+      }
+    }
+
+    return joinStatement
+  }
+
+  def createQueryExecution(spark: SparkSession, sparqlQuery: String): DataFrame = {
+    val sqlQuery = Sparql2SqlTablewise(sparqlQuery) // it will return the sql query
+    val df = spark.sql(sqlQuery)
+    df
+  }
 }

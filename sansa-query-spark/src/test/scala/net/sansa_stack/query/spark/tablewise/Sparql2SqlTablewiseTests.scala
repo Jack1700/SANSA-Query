@@ -1,4 +1,4 @@
-package net.sansa_stack.query.spark.tablewise
+/*package net.sansa_stack.query.spark.tablewise
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.scalatest.FunSuite
@@ -15,8 +15,12 @@ class Sparql2SqlTablewiseTests extends FunSuite with DataFrameSuiteBase {
   test("running BSBM Q1 should result 10") {
 
     val query = getClass.getResource("/queries/Q1.sparql").getPath
+<<<<<<< HEAD
 
     val Sparql2Sql = new Sparql2SqlTablewise()
+=======
+    val Sparql2Sql = new Sparql2SqlTablewise()
+>>>>>>> branch 'develop' of https://github.com/Jack1700/SANSA-Query
     val sqlQuery = Sparql2Sql.Sparql2SqlTablewise("SELECT ?X WHERE { ?X <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature> <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature40> .}");
 
     val result = spark.sparqlDL(query, mappingsFile, configFile)
@@ -76,6 +80,7 @@ class Sparql2SqlTablewiseTests extends FunSuite with DataFrameSuiteBase {
     assert(size == 0)
   }
 
+<<<<<<< HEAD
   
   
   
@@ -139,3 +144,8 @@ class Sparql2SqlTablewiseTests extends FunSuite with DataFrameSuiteBase {
   
   
 }
+=======
+}
+
+*/
+>>>>>>> branch 'develop' of https://github.com/Jack1700/SANSA-Query
