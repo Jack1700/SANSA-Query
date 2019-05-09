@@ -54,6 +54,8 @@ class Sparql2SqlTablewise {
     }
     return " ( (" + select + from + where + ")" + " AS " + tableNum + " ) "
   }
+  
+  
 
   def cleanProjectVariables(projectVariables: List[Var]): String = {
     var variables = new ArrayBuffer[String]();
