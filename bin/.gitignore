@@ -54,3 +54,4 @@ stat*.txt
 
 scalastyle-output.xml
 
+/sansa-query-spark/
