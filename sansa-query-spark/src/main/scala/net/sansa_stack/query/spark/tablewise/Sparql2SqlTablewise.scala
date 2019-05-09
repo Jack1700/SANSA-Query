@@ -52,7 +52,7 @@ class Sparql2SqlTablewise {
     } else {
       select += " AS " + _object + " "
     }
-    return " ( (" + select + from + where + ")" + " AS " + tableNum + " ) "
+    return " ( (" + select + from + where + ")" + " AS " + "A" + tableNum + " ) "
   }
   
   
@@ -61,7 +61,8 @@ class Sparql2SqlTablewise {
     var variables = new ArrayBuffer[String]();
     var v = 0;
     for (v <- 0 until projectVariables.size()) {
-      variables += projectVariables.get(v).toString.substring(1);
+      print(v)
+      variables += projectVariables.get(v).toString.substring(1,2);
     }
     return variables.toString.substring(12, variables.toString.size - 1);
   }
@@ -69,9 +70,9 @@ class Sparql2SqlTablewise {
   def Sparql2SqlTablewise(QueryString: String): String = {
     val query = QueryFactory.create(QueryString);
     TripleGetter.generateStringTriples(query);
-
+    print(query.getProjectVars());
     val variables = cleanProjectVariables(query.getProjectVars());
-    val select = "SELECT " + variables + " ";
+    val select = "SELECT " + "A0." + variables + " ";
     var from = "FROM ";
     var i = 0;
     for (i <- 0 until TripleGetter.getSubjects().size) {
