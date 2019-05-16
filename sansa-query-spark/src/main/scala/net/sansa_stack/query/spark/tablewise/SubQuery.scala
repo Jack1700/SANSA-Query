@@ -70,4 +70,5 @@ object JoinSubQuery {
     
     return newQuery;
   }
+  
 }
