@@ -77,7 +77,7 @@ class Sparql2SqlTablewise {
           where = "WHERE " + filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
           whereUsed = true
         } else {
-          where+= "AND"
+          where+= "AND "+ filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
         }
       }
     }
@@ -183,11 +183,12 @@ class Sparql2SqlTablewise {
       //check Object is a Variable
       if (_object(0) != '"') {
         _newSubQuery.appendVariable(_object);
+      }
       
       _newSubQuery.setName("T" + i);
       _newSubQuery.setQuery(for1Pattern(_subject, _predicate, _object, i, _newSubQuery.getVariables()))
 
-      }
+      
       queries+= _newSubQuery;
 
     }
