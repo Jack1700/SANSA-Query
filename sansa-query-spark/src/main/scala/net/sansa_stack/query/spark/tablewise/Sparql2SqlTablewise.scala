@@ -135,6 +135,8 @@ FROM
 
   def initQueryArray(myQuery: Query): ArrayBuffer[SubQuery] = {
     var queries: ArrayBuffer[SubQuery] = new ArrayBuffer[SubQuery]();
+    TripleGetter.generateFilters(myQuery);
+    /*
     TripleGetter.generateStringTriples(myQuery);
     for (i <- 0 until TripleGetter.getSubjects().size) {
       val _newSubQuery: SubQuery = new SubQuery();
@@ -161,7 +163,11 @@ FROM
       queries+= _newSubQuery;
 
     }
+   
+    */
     return queries;
+    
+    
   }
 
   def createQueryExecution(spark: SparkSession, sparqlQuery: String): DataFrame = {
