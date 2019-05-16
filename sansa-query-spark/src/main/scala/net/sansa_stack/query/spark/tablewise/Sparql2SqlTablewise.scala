@@ -163,8 +163,6 @@ class Sparql2SqlTablewise {
   
   def initQueryArray(myQuery: Query): ArrayBuffer[SubQuery] = {
     var queries: ArrayBuffer[SubQuery] = new ArrayBuffer[SubQuery]();
-    TripleGetter.generateFilters(myQuery);
-    /*
     TripleGetter.generateStringTriples(myQuery);
     for (i <- 0 until TripleGetter.getSubjects().size) {
       val _newSubQuery: SubQuery = new SubQuery();
@@ -193,7 +191,7 @@ class Sparql2SqlTablewise {
 
     }
    
-    */
+   
     return queries;
     
     
