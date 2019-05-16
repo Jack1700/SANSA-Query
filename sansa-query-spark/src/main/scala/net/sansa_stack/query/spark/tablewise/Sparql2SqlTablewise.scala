@@ -15,6 +15,7 @@ import org.apache.jena.query.Query
 import org.apache.spark.sql.DataFrame
 import scala.collection.immutable.Stack
 import scala.collection.mutable.ArrayStack
+import scala.collection.mutable.Queue
 
 
 
@@ -67,22 +68,16 @@ class Sparql2SqlTablewise {
     
     if (!whereUsed) where = ""
 
+    
     val filterVariables = TripleGetter.getFilterVariables()
     var i = 0
     for(i <- 0 until filterVariables.size) {
       if(variables.contains(filterVariables(i))) {
-        var postfix = ""
-        filterVariables(i) match {
-          case subject => postfix = "s"
-          case _object => postfix = "o"
-          case predicat => postfix = "p"
-        } 
-        
         if(!whereUsed) {
-          where = "WHERE " + "triples." + postfix + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
+          where = "WHERE " + filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
           whereUsed = true
         } else {
-          where+= " AND "+ "triples." + postfix + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
+          where+= "AND "+ filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
         }
       }
     }
@@ -93,12 +88,12 @@ class Sparql2SqlTablewise {
   }
 
   
-  def cleanProjectVariables(projectVariables: List[Var], SubQuerys: ArrayBuffer[SubQuery]): String = {
+  def cleanProjectVariables(projectVariables: List[Var], SubQuerys: Queue[SubQuery]): String = {
     var variables = new ArrayBuffer[String]();
     var v = 0;
     for (v <- 0 until projectVariables.size()) {
-      var variable = projectVariables.get(v).toString
-      variable = variable.substring(1, variable.size)
+      var variable = projectVariables.get(v).toString;
+      variable = variable.substring(1,variable.size)
       variables += getTablewithVariable(variable, SubQuerys) + "." + variable
     }
     return variables.toString.substring(12, variables.toString.size - 1);
@@ -107,13 +102,80 @@ class Sparql2SqlTablewise {
   
   def Sparql2SqlTablewise(QueryString: String): String = {
     val query = QueryFactory.create(QueryString);
-    val queries = initQueryArray(query);
-    return JoinQueries(queries,query.getProjectVars);
+    val queries = initQueryQueue(query);
+    return JoinQueries2(queries,query.getProjectVars);
 
   }
 
   
-  def JoinQueries(queries: ArrayBuffer[SubQuery], projectVariables: List[Var]): String = {
+  
+  def JoinQueries2(queries: Queue[SubQuery], projectVariables: List[Var]): String = {
+    var Statement = "SELECT " + cleanProjectVariables(projectVariables, queries) + " FROM \n";
+    val Q0 = queries.dequeue()
+    var variables = new ArrayBuffer[String]()
+    
+    for (variable <- Q0.getVariables()){
+      variables += ("Q0."+variable)
+    }
+    Statement += Q0.getQuery() + " Q0 \n";
+    
+    while(!queries.isEmpty){
+      var Q = queries.dequeue()
+      var vFound = false
+      for (variable <- Q.getVariables()){
+        
+        if ((containsVariable(variable, variables)!=null)){
+          vFound = true
+        }
+      }
+      if (vFound){
+        
+        Statement += "INNER JOIN " + Q.getQuery() + Q.getName() + onPart2(Q, variables) + "\n";
+      }
+      else{
+        queries.enqueue(Q)
+      }
+    }
+    
+    return Statement
+    
+  }
+  
+  def onPart2(query: SubQuery, variables: ArrayBuffer[String]): String = {
+    var variables = ArrayBuffer(query.getVariables().toArray: _*)
+    var on = " ON "
+    var onUsed = false;
+    for (v <- variables){
+      var name=""
+      
+      if ((name = containsVariable(v,variables))!=null){
+        if (onUsed){
+          on+= " AND "
+        }
+        
+        on+= name + "." + v + " = " + query.getName() + "." + v
+        onUsed= true
+      }
+      else{
+        variables += (query.getName()+"."+v)
+      }
+    }
+    
+    return on
+  }
+  
+  
+  def containsVariable(variable: String, variables: ArrayBuffer[String]): String = {
+    for (v <- variables){
+      val String = v.split(".")
+      if (variable == String(1)){
+        return String(0)  
+      }
+    }
+    return null
+  }
+  
+  def JoinQueries(queries: Queue[SubQuery], projectVariables: List[Var]): String = {
     
     
     /*
@@ -135,8 +197,8 @@ class Sparql2SqlTablewise {
     */
 
     var Statement = "SELECT " + cleanProjectVariables(projectVariables, queries) + " FROM \n";
-    val Q0 = queries(0)
-     queries.remove(0)
+    val Q0 = queries.dequeue()
+    var variables = new ArrayBuffer[String]();
     Statement += Q0.getQuery() + " Q0 \n";
     var i = 1;
     for (i <- 0 until queries.size) {
@@ -167,10 +229,9 @@ class Sparql2SqlTablewise {
   }
 
   
-  def initQueryArray(myQuery: Query): ArrayBuffer[SubQuery] = {
-    var queries: ArrayBuffer[SubQuery] = new ArrayBuffer[SubQuery]();
+  def initQueryQueue(myQuery: Query): Queue[SubQuery] = {
+    var queries: Queue[SubQuery] = new Queue[SubQuery]();
     TripleGetter.generateStringTriples(myQuery);
-    TripleGetter.generateFilters(myQuery);
     for (i <- 0 until TripleGetter.getSubjects().size) {
       val _newSubQuery: SubQuery = new SubQuery();
 
@@ -189,11 +250,11 @@ class Sparql2SqlTablewise {
       if (_object(0) != '"') {
         _newSubQuery.appendVariable(_object);
       }
-
-      _newSubQuery.setName("T" + i);
+      _newSubQuery.setName("Q" + i);
       _newSubQuery.setQuery(for1Pattern(_subject, _predicate, _object, i, _newSubQuery.getVariables()))
 
-      queries+= _newSubQuery;
+      
+      queries.enqueue(_newSubQuery);
 
     }
    
@@ -207,13 +268,12 @@ class Sparql2SqlTablewise {
   def createQueryExecution(spark: SparkSession, sparqlQuery: String): DataFrame = {
     val sqlQuery = Sparql2SqlTablewise(sparqlQuery) // it will return the sql query
     println(sqlQuery)
-    println(TripleGetter.getFilterVariables())
     val df = spark.sql(sqlQuery)
     df
   }
   
   
-  def getTablewithVariable (variable: String, SubQuerys: ArrayBuffer[SubQuery]): String = {
+  def getTablewithVariable (variable: String, SubQuerys: Queue[SubQuery]): String = {
     
     var i=0
     for (i <- 0 until SubQuerys.size) {
@@ -222,7 +282,7 @@ class Sparql2SqlTablewise {
       }
       
     }
-    return "function failed"
+    return ""
   }
   
 }
