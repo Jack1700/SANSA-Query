@@ -77,7 +77,7 @@ class Sparql2SqlTablewise {
           where = "WHERE " + filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
           whereUsed = true
         } else {
-          
+          where+= "AND "+ filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
         }
       }
     }
@@ -92,7 +92,8 @@ class Sparql2SqlTablewise {
     var variables = new ArrayBuffer[String]();
     var v = 0;
     for (v <- 0 until projectVariables.size()) {
-      val variable = projectVariables.get(v).toString.substring(1, 2);
+      var variable = projectVariables.get(v).toString;
+      variable = variable.substring(1,variable.size)
       variables += getTablewithVariable(variable, SubQuerys) + "." + variable
     }
     return variables.toString.substring(12, variables.toString.size - 1);
