@@ -32,6 +32,9 @@ object TripleGetter {
   
   
   def generateStringTriples(query: Query):Unit = {
+    subjects.clear
+    predicates.clear
+    objects.clear
 
     // This will walk through all parts of the query
     ElementWalker.walk(

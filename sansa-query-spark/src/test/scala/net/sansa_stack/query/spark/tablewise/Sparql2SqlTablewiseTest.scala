@@ -12,10 +12,9 @@ import net.sansa_stack.rdf.spark.model._
 import net.sansa_stack.rdf.spark.io._
 import org.apache.jena.riot.Lang
 
-class IsmailTest extends FunSuite with DataFrameSuiteBase {
+class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
   
   test("test 1") {
-    //create Spark Session
     val OurProgram = new Sparql2SqlTablewise()
     val input = getClass.getResource("/datasets/bsbm-sample.nt").getPath
    // val query = getClass.getResource("/queries/bsbm/Q1.sparql").getPath
@@ -26,30 +25,24 @@ class IsmailTest extends FunSuite with DataFrameSuiteBase {
     val fileContents = Source.fromFile(query).getLines.mkString
     // our translation 
     val result = OurProgram.createQueryExecution(spark, fileContents)
-    // right query gives 7 back 
-    // val result = spark.sql("SELECT X FROM (SELECT  triples.s  AS X , triples.p , triples.o  FROM triples  WHERE  triples.p=\"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature\" And  triples.o= \"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature40\")")
     print(result.count())
     assert(result.count() == 7)
   }
   
    test("test 2") {
-    //create Spark Session
     val OurProgram = new Sparql2SqlTablewise()
     val input = getClass.getResource("/datasets/bsbm-sample.nt").getPath
-   // val query = getClass.getResource("/queries/bsbm/Q5.sparql").getPath
     val triples = spark.rdf(Lang.NTRIPLES)(input)
     val df = triples.toDF()
-    
     // query from test resources 
      val query = "src/test/resources/queries/bsbm/Q5.sparql"
     val fileContents = Source.fromFile(query).getLines.mkString
-    print(fileContents)
     // our translation 
-    val result = OurProgram.createQueryExecution(spark, fileContents)
-    // right query gives 4 back 
-    // val result = spark.sql("SELECT X FROM (SELECT  triples.s  AS X , triples.p , triples.o  FROM triples  WHERE  triples.p=\"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature\" And  triples.o= \"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature40\")")
+    val result = OurProgram.createQueryExecution(spark, """SELECT ?X ?Y WHERE {
+    ?X <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductType3> .
+    ?X <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature> ?Y .}""")
     print(result.count())
-    assert(result.count() == 4)
+    assert(result.count() == 674)
   }
   
 

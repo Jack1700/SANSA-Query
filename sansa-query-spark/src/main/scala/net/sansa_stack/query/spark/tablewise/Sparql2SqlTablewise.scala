@@ -17,7 +17,6 @@ import scala.collection.immutable.Stack
 import scala.collection.mutable.ArrayStack
 
 class Sparql2SqlTablewise {
-
   def for1Pattern(subject: String, predicate: String, _object: String, tableNum: Int): String = {
 
     var beforeWhere = false;
@@ -25,13 +24,14 @@ class Sparql2SqlTablewise {
     var select = "SELECT ";
     val from = " FROM triples ";
     var where = " WHERE "
+    var whereUsed = false;
 
-    
     if (subject(0) == '"') {
       where += " triples.s=" + subject
       beforeWhere = true
+      whereUsed = true
     } else {
-      select +=" triples.s AS " + subject + " "
+      select += " triples.s AS " + subject + " "
       beforeSelect = true
 
     }
@@ -39,13 +39,14 @@ class Sparql2SqlTablewise {
       if (beforeWhere)
         where += " AND "
       where += " triples.p=" + predicate
+      whereUsed = true
 
       beforeWhere = true
     } else {
-      if (beforeSelect)//select coma here
-        select+= " , "
+      if (beforeSelect) //select coma here
+        select += " , "
       select += " triples.p AS " + predicate + " "
-      beforeSelect=true
+      beforeSelect = true
 
     }
 
@@ -53,140 +54,118 @@ class Sparql2SqlTablewise {
       if (beforeWhere)
         where += " AND "
       where += " triples.o= " + _object;
+      whereUsed = true
 
     } else {
       if (beforeSelect)
-        select+= " , "
+        select += " , "
       select += " triples.o AS " + _object + " "
     }
-    return " ( (" + select + from + where + ")" + " AS " + "T" + tableNum + " ) "
+    if (!whereUsed) where = ""
+    return "  (" + select + from + where + ")"
   }
-  
-  
 
   def cleanProjectVariables(projectVariables: List[Var]): String = {
     var variables = new ArrayBuffer[String]();
     var v = 0;
     for (v <- 0 until projectVariables.size()) {
-      print(v)
-      variables += projectVariables.get(v).toString.substring(1,2);
+      variables += projectVariables.get(v).toString.substring(1, 2);
     }
     return variables.toString.substring(12, variables.toString.size - 1);
   }
-  
-  
 
   def Sparql2SqlTablewise(QueryString: String): String = {
     val query = QueryFactory.create(QueryString);
-    val myStack = initQueryStack(query);
-    val mySubQuery:SubQuery = joinQueries(myStack);
-    return mySubQuery.getQuery();
+    val queries = initQueryArray(query);
+    return JoinQueries(queries,query.getProjectVars);
 
   }
-  
-  def initQueryStack(myQuery:Query): ArrayStack[SubQuery] = {
-    var stack: ArrayStack[SubQuery] = new ArrayStack[SubQuery]();
+
+  def JoinQueries(queries: ArrayBuffer[SubQuery], projectVariables: List[Var]): String = {
+    
+    
+    /*
+     * 
+     * Format must be like this
+    ;WITH Data AS(Select * From Customers)
+
+SELECT
+    *
+FROM
+    Data D1
+    INNER JOIN Data D2 ON D2.ID=D1.ID
+    INNER JOIN Data D3 ON D3.ID=D2.ID
+    INNER JOIN Data D4 ON D4.ID=D3.ID
+    INNER JOIN Data D5 ON D5.ID=D4.ID
+    INNER JOIN Data D6 ON D6.ID=D5.ID
+    INNER JOIN Data D7 ON D7.ID=D6.ID
+    *
+    */
+
+    var Statement = "SELECT * FROM \n";
+    val Q0 = queries(0)
+     queries.remove(0)
+    Statement += Q0.getQuery() + " Q0 \n";
+    var i = 1;
+    for (i <- 0 until queries.size) {
+      val Q = queries(i);
+      if (i == 0) {
+        Statement += "INNER JOIN " + Q.getQuery() + " Q1 " + onPart(Q0, queries(i), "Q0", "Q1") + "\n";
+      } else {
+        Statement += "INNER JOIN " + Q.getQuery() + " Q" + (i + 1) + onPart(queries(i - 1), queries(i), "Q" + i, "Q" + (i + 1)) + "\n";
+      }
+    }
+    return Statement;
+  }
+
+  def onPart(q1: SubQuery, q2: SubQuery, name1: String, name2: String): String = {
+    var joinVariables = q1.getVariables().intersect(q2.getVariables()).toList;
+    var onPart = " ON "
+    var i = 0;
+    for (i <- 0 until joinVariables.size) {
+      onPart += name1 + "." + joinVariables(i) + "=" + name2 + "." + joinVariables(i)
+      if (i != joinVariables.size - 1) {
+        onPart += " AND "
+      }
+    }
+
+    return onPart;
+
+  }
+
+  def initQueryArray(myQuery: Query): ArrayBuffer[SubQuery] = {
+    var queries: ArrayBuffer[SubQuery] = new ArrayBuffer[SubQuery]();
     TripleGetter.generateStringTriples(myQuery);
     for (i <- 0 until TripleGetter.getSubjects().size) {
-      val _newSubQuery:SubQuery = new SubQuery();
-      
+      val _newSubQuery: SubQuery = new SubQuery();
+
       val _subject = TripleGetter.getSubjects()(i);
       val _predicate = TripleGetter.getPredicates()(i);
       val _object = TripleGetter.getObjects()(i);
-      
+
       _newSubQuery.setName("T" + i);
-      _newSubQuery.setQuery(for1Pattern(_subject,_predicate,_object,i))
-      
-      //Prof Subject is a Variable
-      if(_subject(0) !=  '"'){
+      _newSubQuery.setQuery(for1Pattern(_subject, _predicate, _object, i))
+
+      //check Subject is a Variable
+      if (_subject(0) != '"') {
         _newSubQuery.appendVariable(_subject);
       }
-       //Prof Predicate is a Variable
-      if(_predicate(0) !=  '"'){
+      //check Predicate is a Variable
+      if (_predicate(0) != '"') {
         _newSubQuery.appendVariable(_predicate);
       }
-       //Prof Object is a Variable
-      if(_object(0) !=  '"'){
+      //check Object is a Variable
+      if (_object(0) != '"') {
         _newSubQuery.appendVariable(_object);
       }
-      stack.push(_newSubQuery);
+      queries+= _newSubQuery;
 
     }
-    return stack;
+    return queries;
   }
-  
-  def joinQueries(myStack:ArrayStack[SubQuery]):SubQuery = {
-    while(myStack.length > 1){
-      myStack.push(JoinSubQuery.join(myStack.pop(), myStack.pop()))
-    }
-    return myStack.pop();
-  }
-  
- 
-/*
-  def joinOn(lastSubject: String, lastPredicate: String, lastObject: String, subject: String, predicate: String, _object: String,
-             tableNum1: Int, tableNum2: Int): String = {
-    var joinStatement = " ON "
-    var joined = false
-    if (lastSubject(0) != '"') {
-      lastSubject match {
-        case subject   => joinStatement += tableNum1 + "." + lastSubject + "=" + tableNum2 + "." + subject + " "; joined = true;
-        case predicate => joinStatement += tableNum1 + "." + lastSubject + "=" + tableNum2 + "." + predicate + " "; joined = true;
-        case _object   => joinStatement += tableNum1 + "." + lastSubject + "=" + tableNum2 + "." + _object + " "; joined = true;
-      }
-    }
 
-    if (lastPredicate(0) != '"') {
-      lastPredicate match {
-        case subject => {
-          if (joined)
-            joinStatement += " AND "
-          joined = true;
-          joinStatement += tableNum1 + "." + lastPredicate + "=" + tableNum2 + "." + subject + " ";
-        }
-        case predicate => {
-          if (joined)
-            joinStatement += " AND "
-          joined = true;
-          joinStatement += tableNum1 + "." + lastPredicate + "=" + tableNum2 + "." + predicate + " ";
-        }
-        case _object => {
-          if (joined)
-            joinStatement += " AND "
-          joined = true;
-          joinStatement += tableNum1 + "." + lastPredicate + "=" + tableNum2 + "." + _object + " ";
-        }
-      }
-    }
-    if (lastObject(0) != '"') {
-      lastObject match {
-        case subject => {
-          if (joined)
-            joinStatement += " AND "
-          joinStatement += tableNum1 + "." + lastObject + "=" + tableNum2 + "." + subject + " ";
-        }
-        case predicate => {
-          if (joined)
-            joinStatement += " AND "
-          joinStatement += tableNum1 + "." + lastObject + "=" + tableNum2 + "." + predicate + " ";
-
-        }
-        case _object => {
-          if (joined)
-            joinStatement += " AND "
-          joinStatement += tableNum1 + "." + lastObject + "=" + tableNum2 + "." + _object + " ";
-
-        }
-      }
-    }
-
-    return  joinStatement
-  }
-*/
-  
   def createQueryExecution(spark: SparkSession, sparqlQuery: String): DataFrame = {
     val sqlQuery = Sparql2SqlTablewise(sparqlQuery) // it will return the sql query
-    print(sqlQuery)
     val df = spark.sql(sqlQuery)
     df
   }
