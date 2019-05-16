@@ -22,7 +22,7 @@ class Sparql2SqlTablewise {
 
   
   def for1Pattern(subject: String, predicate: String, _object: String, tableNum: Int, variables: HashSet[String]): String = {
-
+    println("Start FOR1Pattern");
     var beforeWhere = false;
     var beforeSelect = false;
     var select = "SELECT ";
@@ -170,8 +170,11 @@ class Sparql2SqlTablewise {
 
       val _subject = TripleGetter.getSubjects()(i);
       val _predicate = TripleGetter.getPredicates()(i);
-      val _object = TripleGetter.getObjects()(i);
-
+      val _object = TripleGetter.getObjects()(i)
+      println(i)
+      println(_subject)
+      println(_predicate)
+      println(_object)
       //check Subject is a Variable
       if (_subject(0) != '"') {
         _newSubQuery.appendVariable(_subject);
@@ -183,12 +186,13 @@ class Sparql2SqlTablewise {
       //check Object is a Variable
       if (_object(0) != '"') {
         _newSubQuery.appendVariable(_object);
-      
+      }
       _newSubQuery.setName("T" + i);
+      println(for1Pattern(_subject, _predicate, _object, i, _newSubQuery.getVariables()));
       _newSubQuery.setQuery(for1Pattern(_subject, _predicate, _object, i, _newSubQuery.getVariables()))
 
-      }
-      queries+= _newSubQuery;
+      
+      queries.append(_newSubQuery);
 
     }
    
