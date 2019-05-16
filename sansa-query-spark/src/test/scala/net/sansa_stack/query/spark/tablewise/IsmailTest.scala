@@ -38,12 +38,12 @@ class IsmailTest extends FunSuite with DataFrameSuiteBase {
     //create Spark Session
     val OurProgram = new Sparql2SqlTablewise()
     val input = getClass.getResource("/datasets/bsbm-sample.nt").getPath
-   // val query = getClass.getResource("/queries/bsbm/Q1.sparql").getPath
+   // val query = getClass.getResource("/queries/bsbm/Q5.sparql").getPath
     val triples = spark.rdf(Lang.NTRIPLES)(input)
     val df = triples.toDF()
     
     // query from test resources 
-     val query = "src/test/resources/queries/bsbm/Q2.sparql"
+     val query = "src/test/resources/queries/bsbm/Q5.sparql"
     val fileContents = Source.fromFile(query).getLines.mkString
     print(fileContents)
     

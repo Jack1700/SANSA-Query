@@ -13,46 +13,53 @@ import java.util.List
 import org.apache.spark.sql.SparkSession
 import org.apache.jena.query.Query
 import org.apache.spark.sql.DataFrame
+import scala.collection.immutable.Stack
+import scala.collection.mutable.ArrayStack
 
 class Sparql2SqlTablewise {
 
   def for1Pattern(subject: String, predicate: String, _object: String, tableNum: Int): String = {
 
     var beforeWhere = false;
+    var beforeSelect = false;
     var select = "SELECT ";
     val from = " FROM triples ";
     var where = " WHERE "
 
-    select += " triples.s "
+    
     if (subject(0) == '"') {
       where += " triples.s=" + subject
       beforeWhere = true
     } else {
-      select += " AS " + subject + " "
+      select +=" triples.s AS " + subject + " "
+      beforeSelect = true
 
     }
-    select += ", triples.p "
     if (predicate(0) == '"') {
       if (beforeWhere)
-        where += " And "
+        where += " AND "
       where += " triples.p=" + predicate
 
       beforeWhere = true
     } else {
-      select += " AS " + predicate + " "
+      if (beforeSelect)//select coma here
+        select+= " , "
+      select += " triples.p AS " + predicate + " "
+      beforeSelect=true
 
     }
-    select += ", triples.o "
 
     if (_object(0) == '"') {
       if (beforeWhere)
-        where += " And "
+        where += " AND "
       where += " triples.o= " + _object;
 
     } else {
-      select += " AS " + _object + " "
+      if (beforeSelect)
+        select+= " , "
+      select += " triples.o AS " + _object + " "
     }
-    return " ( (" + select + from + where + ")" + " AS " + "A" + tableNum + " ) "
+    return " ( (" + select + from + where + ")" + " AS " + "T" + tableNum + " ) "
   }
   
   
@@ -66,37 +73,57 @@ class Sparql2SqlTablewise {
     }
     return variables.toString.substring(12, variables.toString.size - 1);
   }
+  
+  
 
   def Sparql2SqlTablewise(QueryString: String): String = {
     val query = QueryFactory.create(QueryString);
-    TripleGetter.generateStringTriples(query);
-    print(query.getProjectVars());
-    val variables = cleanProjectVariables(query.getProjectVars());
-    val select = "SELECT " + "A0." + variables + " ";
-    var from = "FROM ";
-    var i = 0;
-    for (i <- 0 until TripleGetter.getSubjects().size) {
-      val subject = TripleGetter.getSubjects()(i);
-      val predicate = TripleGetter.getPredicates()(i);
-      val _object = TripleGetter.getObjects()(i);
-      var addToFrom = ""
-      if (i > 0) {
-        val lastSubject = TripleGetter.getSubjects()(i - 1);
-        val lastPredicate = TripleGetter.getPredicates()(i - 1);
-        val lastObject = TripleGetter.getObjects()(i - 1);
-        // from += "\n Join \n";
-        // addToFrom = "\n" + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "\n"
-        from += " Join ";
-        addToFrom = "  " + joinOn(lastSubject, lastPredicate, lastObject, subject, predicate, _object, i - 1, i) + "  "
-      }
-      from += for1Pattern(subject, predicate, _object, i);
-      from += addToFrom
-
-    }
-    return select + from;
+    val myStack = initQueryStack(query);
+    val mySubQuery:SubQuery = joinQueries(myStack);
+    return mySubQuery.getQuery();
 
   }
+  
+  def initQueryStack(myQuery:Query): ArrayStack[SubQuery] = {
+    var stack: ArrayStack[SubQuery] = new ArrayStack[SubQuery]();
+    TripleGetter.generateStringTriples(myQuery);
+    for (i <- 0 until TripleGetter.getSubjects().size) {
+      val _newSubQuery:SubQuery = new SubQuery();
+      
+      val _subject = TripleGetter.getSubjects()(i);
+      val _predicate = TripleGetter.getPredicates()(i);
+      val _object = TripleGetter.getObjects()(i);
+      
+      _newSubQuery.setName("T" + i);
+      _newSubQuery.setQuery(for1Pattern(_subject,_predicate,_object,i))
+      
+      //Prof Subject is a Variable
+      if(_subject(0) !=  '"'){
+        _newSubQuery.appendVariable(_subject);
+      }
+       //Prof Predicate is a Variable
+      if(_predicate(0) !=  '"'){
+        _newSubQuery.appendVariable(_predicate);
+      }
+       //Prof Object is a Variable
+      if(_object(0) !=  '"'){
+        _newSubQuery.appendVariable(_object);
+      }
+      stack.push(_newSubQuery);
 
+    }
+    return stack;
+  }
+  
+  def joinQueries(myStack:ArrayStack[SubQuery]):SubQuery = {
+    while(myStack.length > 1){
+      myStack.push(JoinSubQuery.join(myStack.pop(), myStack.pop()))
+    }
+    return myStack.pop();
+  }
+  
+ 
+/*
   def joinOn(lastSubject: String, lastPredicate: String, lastObject: String, subject: String, predicate: String, _object: String,
              tableNum1: Int, tableNum2: Int): String = {
     var joinStatement = " ON "
@@ -153,11 +180,13 @@ class Sparql2SqlTablewise {
       }
     }
 
-    return joinStatement
+    return  joinStatement
   }
-
+*/
+  
   def createQueryExecution(spark: SparkSession, sparqlQuery: String): DataFrame = {
     val sqlQuery = Sparql2SqlTablewise(sparqlQuery) // it will return the sql query
+    print(sqlQuery)
     val df = spark.sql(sqlQuery)
     df
   }

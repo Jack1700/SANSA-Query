@@ -1,3 +1,5 @@
+package net.sansa_stack.query.spark.tablewise
+
 import scala.collection.mutable.HashSet
 class SubQuery{
   
@@ -6,7 +8,7 @@ class SubQuery{
   var sName : String = "";
   var sQuery: String = "";
   
-  def appendVeriable(variable:String):Unit = {
+  def appendVariable(variable:String):Unit = {
     variables += variable;
   }
   
