@@ -4,7 +4,7 @@ import org.apache.jena.sparql.core.TriplePath
 import org.apache.jena.sparql.syntax.ElementPathBlock
 import org.apache.jena.sparql.syntax.ElementVisitorBase
 import org.apache.jena.sparql.syntax.ElementWalker
-import java.util.HashSet
+import scala.collection.mutable.HashSet
 import scala.collection.mutable.ArrayBuffer
 import org.apache.jena.query.{ QueryExecutionFactory, QuerySolutionMap, QueryFactory }
 import scala.collection.mutable.Set
@@ -184,7 +184,7 @@ class Sparql2SqlTablewise {
         _newSubQuery.appendVariable(_object);
       
       _newSubQuery.setName("T" + i);
-      _newSubQuery.setQuery(for1Pattern(_subject, _predicate, _object, i, _newSubQuery.getVaribles()))
+      _newSubQuery.setQuery(for1Pattern(_subject, _predicate, _object, i, _newSubQuery.getVariables()))
 
       }
       queries+= _newSubQuery;
