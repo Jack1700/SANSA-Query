@@ -53,20 +53,15 @@ object TripleGetter {
     filterValue.clear
     
 	query.getQueryPattern();
-	println("TEST Print:")
 	 ElementWalker.walk(query.getQueryPattern(),new ElementVisitorBase() {
 	   
 	   override def
 	   visit(element: ElementFilter): Unit = {
 	     var el = element.getExpr().toString();
 	     var Variable = element.getExpr.getVarsMentioned.toString()
-	     //println(el)
 	     filterOperator += el.charAt(1).toString();
-	     //println(el.charAt(1));
 	     filterValue += el.split(" ")(2).substring(0,el.split(" ")(2).size -1);
-	     //println(el.split(" ")(2).substring(0,el.split(" ")(2).size -1))
 	     filterVariable += Variable.substring(2,Variable.size -1);
-	     //println(Variable.substring(2,Variable.size -1));
 	   }
 	   
 	 });

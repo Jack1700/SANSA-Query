@@ -78,17 +78,13 @@ WHERE {
     ?review rev:reviewer ?reviewer .
     ?review dc:title ?revTitle .
     ?review bsbm:rating1 ?rating1 .
-    ?review bsbm:rating2 ?rating2 .
+    ?review bsbm:rat ing2 ?rating2 .
     ?reviewer foaf:name ?revName .
     ?reviewer a foaf:Person .
-    FILTER(?price > 5000)
     FILTER(?product = 9)
+    FILTER(?price > 5000)
 }""")
     print(result.count())
-    assert(result.count() == 674)
+    assert(result.count() == 0)
   }
-   
- 
-  
-
 }

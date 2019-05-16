@@ -22,7 +22,6 @@ class Sparql2SqlTablewise {
 
   
   def for1Pattern(subject: String, predicate: String, _object: String, tableNum: Int, variables: HashSet[String]): String = {
-    println("Start FOR1Pattern");
     var beforeWhere = false;
     var beforeSelect = false;
     var select = "SELECT ";
@@ -68,16 +67,22 @@ class Sparql2SqlTablewise {
     
     if (!whereUsed) where = ""
 
-    
     val filterVariables = TripleGetter.getFilterVariables()
     var i = 0
     for(i <- 0 until filterVariables.size) {
       if(variables.contains(filterVariables(i))) {
+        var postfix = ""
+        filterVariables(i) match {
+          case subject => postfix = "s"
+          case _object => postfix = "o"
+          case predicat => postfix = "p"
+        } 
+        
         if(!whereUsed) {
-          where = "WHERE " + filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
+          where = "WHERE " + "triples." + postfix + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
           whereUsed = true
         } else {
-          where+= "AND "+ filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
+          where+= " AND "+ "triples." + postfix + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
         }
       }
     }
@@ -165,16 +170,13 @@ class Sparql2SqlTablewise {
   def initQueryArray(myQuery: Query): ArrayBuffer[SubQuery] = {
     var queries: ArrayBuffer[SubQuery] = new ArrayBuffer[SubQuery]();
     TripleGetter.generateStringTriples(myQuery);
+    TripleGetter.generateFilters(myQuery);
     for (i <- 0 until TripleGetter.getSubjects().size) {
       val _newSubQuery: SubQuery = new SubQuery();
 
       val _subject = TripleGetter.getSubjects()(i);
       val _predicate = TripleGetter.getPredicates()(i);
       val _object = TripleGetter.getObjects()(i)
-      println(i)
-      println(_subject)
-      println(_predicate)
-      println(_object)
       //check Subject is a Variable
       if (_subject(0) != '"') {
         _newSubQuery.appendVariable(_subject);
@@ -187,20 +189,11 @@ class Sparql2SqlTablewise {
       if (_object(0) != '"') {
         _newSubQuery.appendVariable(_object);
       }
-<<<<<<< HEAD
-      
-=======
->>>>>>> branch 'develop' of https://github.com/Jack1700/SANSA-Query
+
       _newSubQuery.setName("T" + i);
-      println(for1Pattern(_subject, _predicate, _object, i, _newSubQuery.getVariables()));
       _newSubQuery.setQuery(for1Pattern(_subject, _predicate, _object, i, _newSubQuery.getVariables()))
 
-      
-<<<<<<< HEAD
       queries+= _newSubQuery;
-=======
-      queries.append(_newSubQuery);
->>>>>>> branch 'develop' of https://github.com/Jack1700/SANSA-Query
 
     }
    
@@ -214,6 +207,7 @@ class Sparql2SqlTablewise {
   def createQueryExecution(spark: SparkSession, sparqlQuery: String): DataFrame = {
     val sqlQuery = Sparql2SqlTablewise(sparqlQuery) // it will return the sql query
     println(sqlQuery)
+    println(TripleGetter.getFilterVariables())
     val df = spark.sql(sqlQuery)
     df
   }
