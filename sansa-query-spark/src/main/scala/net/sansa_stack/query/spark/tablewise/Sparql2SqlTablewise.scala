@@ -142,13 +142,13 @@ class Sparql2SqlTablewise {
   }
   
   def onPart2(query: SubQuery, variables: ArrayBuffer[String]): String = {
-    var variables = ArrayBuffer(query.getVariables().toArray: _*)
+    var queryVariables = ArrayBuffer(query.getVariables().toArray: _*)
     var on = " ON "
     var onUsed = false;
-    for (v <- variables){
-      var name=""
+    for (v <- queryVariables){
+      var name = containsVariable(v,variables)
       
-      if ((name = containsVariable(v,variables))!=null){
+      if (name!= null){
         if (onUsed){
           on+= " AND "
         }
@@ -160,16 +160,17 @@ class Sparql2SqlTablewise {
         variables += (query.getName()+"."+v)
       }
     }
-    
+    println("onPart2 :" + on)
     return on
   }
   
   
   def containsVariable(variable: String, variables: ArrayBuffer[String]): String = {
     for (v <- variables){
-      val String = v.split(".")
-      if (variable == String(1)){
-        return String(0)  
+      println(v)
+      val str = v.split("\\.")
+      if (variable == str(1)){
+        return str(0)  
       }
     }
     return null
