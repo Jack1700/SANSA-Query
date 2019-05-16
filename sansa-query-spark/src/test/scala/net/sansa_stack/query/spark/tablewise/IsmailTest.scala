@@ -29,8 +29,7 @@ class IsmailTest extends FunSuite with DataFrameSuiteBase {
     // our translation 
     val result = OurProgram.createQueryExecution(spark, fileContents)
     
-    // right query gives 7 back 
-    // val result = spark.sql("SELECT X FROM (SELECT  triples.s  AS X , triples.p , triples.o  FROM triples  WHERE  triples.p=\"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature\" And  triples.o= \"http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature40\")")
+    // correct query should return 7 matches 
     print(result.count())
     assert(result.count() == 7)
   }
