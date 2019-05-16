@@ -69,12 +69,12 @@ class Sparql2SqlTablewise {
     if (!whereUsed) where = ""
 
     
-    val filter = TripleGetter.getFilterVariables()
+    val filterVariables = TripleGetter.getFilterVariables()
     var i = 0
-    for(i <- 0 until filter.size) {
-      if(variables.contains(filter(i))) {
+    for(i <- 0 until filterVariables.size) {
+      if(variables.contains(filterVariables(i))) {
         if(!whereUsed) {
-          where = "WHERE " + filter(i) + " " + getFilterOperator()(i) + " " + getFilterValue()(i)
+          where = "WHERE " + filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
           whereUsed = true
         } else {
           

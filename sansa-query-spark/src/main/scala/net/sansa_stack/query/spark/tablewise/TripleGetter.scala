@@ -35,15 +35,15 @@ object TripleGetter {
     return objects;
   }
    
-  def getFilterVariable(): ArrayBuffer[String] ={
+  def getFilterVariables(): ArrayBuffer[String] ={
     return filterVariable;
   }
   
-  def getFilterValue(): ArrayBuffer[String] ={
+  def getFilterValues(): ArrayBuffer[String] ={
     return filterValue;
   }
   
-  def getFilterOperator(): ArrayBuffer[String] ={
+  def getFilterOperators(): ArrayBuffer[String] ={
     return filterOperator;
   }
   
