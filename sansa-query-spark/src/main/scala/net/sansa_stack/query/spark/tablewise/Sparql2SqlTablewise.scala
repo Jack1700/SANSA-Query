@@ -16,7 +16,10 @@ import org.apache.spark.sql.DataFrame
 import scala.collection.immutable.Stack
 import scala.collection.mutable.ArrayStack
 
+
+
 class Sparql2SqlTablewise {
+
   def for1Pattern(subject: String, predicate: String, _object: String, tableNum: Int): String = {
 
     var beforeWhere = false;
@@ -65,11 +68,13 @@ class Sparql2SqlTablewise {
     return "  (" + select + from + where + ")"
   }
 
-  def cleanProjectVariables(projectVariables: List[Var]): String = {
+  
+  def cleanProjectVariables(projectVariables: List[Var], SubQuerys: ArrayBuffer[SubQuery]): String = {
     var variables = new ArrayBuffer[String]();
     var v = 0;
     for (v <- 0 until projectVariables.size()) {
-      variables += projectVariables.get(v).toString.substring(1, 2);
+      val variable = projectVariables.get(v).toString.substring(1, 2);
+      variables += getTablewithVariable(variable, SubQuerys) + "." + variable
     }
     return variables.toString.substring(12, variables.toString.size - 1);
   }
@@ -89,20 +94,20 @@ class Sparql2SqlTablewise {
      * Format must be like this
     ;WITH Data AS(Select * From Customers)
 
-SELECT
+		SELECT
     *
-FROM
-    Data D1
-    INNER JOIN Data D2 ON D2.ID=D1.ID
-    INNER JOIN Data D3 ON D3.ID=D2.ID
-    INNER JOIN Data D4 ON D4.ID=D3.ID
-    INNER JOIN Data D5 ON D5.ID=D4.ID
-    INNER JOIN Data D6 ON D6.ID=D5.ID
-    INNER JOIN Data D7 ON D7.ID=D6.ID
+		FROM
+		    Data D1
+		    INNER JOIN Data D2 ON D2.ID=D1.ID
+    		INNER JOIN Data D3 ON D3.ID=D2.ID
+    		INNER JOIN Data D4 ON D4.ID=D3.ID 
+    		INNER JOIN Data D5 ON D5.ID=D4.ID
+    		INNER JOIN Data D6 ON D6.ID=D5.ID
+    		INNER JOIN Data D7 ON D7.ID=D6.ID
     *
     */
 
-    var Statement = "SELECT * FROM \n";
+    var Statement = "SELECT " + cleanProjectVariables(projectVariables, queries) + " FROM \n";
     val Q0 = queries(0)
      queries.remove(0)
     Statement += Q0.getQuery() + " Q0 \n";
@@ -133,6 +138,7 @@ FROM
 
   }
 
+  
   def initQueryArray(myQuery: Query): ArrayBuffer[SubQuery] = {
     var queries: ArrayBuffer[SubQuery] = new ArrayBuffer[SubQuery]();
     TripleGetter.generateFilters(myQuery);
@@ -172,7 +178,22 @@ FROM
 
   def createQueryExecution(spark: SparkSession, sparqlQuery: String): DataFrame = {
     val sqlQuery = Sparql2SqlTablewise(sparqlQuery) // it will return the sql query
+    println(sqlQuery)
     val df = spark.sql(sqlQuery)
     df
   }
+  
+  
+  def getTablewithVariable (variable: String, SubQuerys: ArrayBuffer[SubQuery]): String = {
+    
+    var i=0
+    for (i <- 0 until SubQuerys.size) {
+      if(SubQuerys(i).getVariables().contains(variable)) {
+        return "Q" + i
+      }
+      
+    }
+    return ""
+  }
+  
 }

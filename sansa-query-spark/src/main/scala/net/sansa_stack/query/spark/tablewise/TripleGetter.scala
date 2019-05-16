@@ -11,6 +11,8 @@ import org.apache.jena.query.{ QueryExecutionFactory, QuerySolutionMap, QueryFac
 import org.apache.jena.query.Query
 import arq.query
 
+
+
 object TripleGetter {
 
   private var subjects = new ArrayBuffer[String]();
@@ -71,7 +73,6 @@ object TripleGetter {
 
  }
   
-  
   def generateStringTriples(query: Query):Unit = {
     subjects.clear
     predicates.clear
@@ -108,12 +109,8 @@ object TripleGetter {
             } else {
               predicates += "\"" + predicate + "\"";
             }
-
           }
         }
       });
-    
-
   }
-
 }

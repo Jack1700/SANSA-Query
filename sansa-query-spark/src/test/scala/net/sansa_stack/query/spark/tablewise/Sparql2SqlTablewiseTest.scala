@@ -17,12 +17,13 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
   test("test 1") {
     val OurProgram = new Sparql2SqlTablewise()
     val input = getClass.getResource("/datasets/bsbm-sample.nt").getPath
-   // val query = getClass.getResource("/queries/bsbm/Q1.sparql").getPath
     val triples = spark.rdf(Lang.NTRIPLES)(input)
     val df = triples.toDF()
+    
     // query from test resources 
     val query = "src/test/resources/queries/bsbm/Q1.sparql"
     val fileContents = Source.fromFile(query).getLines.mkString
+    
     // our translation 
     val result = OurProgram.createQueryExecution(spark, fileContents)
     print(result.count())
@@ -34,13 +35,13 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
     val input = getClass.getResource("/datasets/bsbm-sample.nt").getPath
     val triples = spark.rdf(Lang.NTRIPLES)(input)
     val df = triples.toDF()
+    
     // query from test resources 
      val query = "src/test/resources/queries/bsbm/Q5.sparql"
     val fileContents = Source.fromFile(query).getLines.mkString
+    
     // our translation 
-    val result = OurProgram.createQueryExecution(spark, """SELECT ?X ?Y WHERE {
-    ?X <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductType3> .
-    ?X <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature> ?Y .}""")
+    val result = OurProgram.createQueryExecution(spark, fileContents)
     print(result.count())
     assert(result.count() == 674)
   }
