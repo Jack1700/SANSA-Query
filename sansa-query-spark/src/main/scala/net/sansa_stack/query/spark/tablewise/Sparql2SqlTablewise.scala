@@ -155,8 +155,7 @@ class Sparql2SqlTablewise {
         
         on+= name + "." + v + " = " + query.getName() + "." + v
         onUsed= true
-      }
-      else{
+      } else{
         variables += (query.getName()+"."+v)
       }
     }
@@ -167,7 +166,7 @@ class Sparql2SqlTablewise {
   
   def containsVariable(variable: String, variables: ArrayBuffer[String]): String = {
     for (v <- variables){
-      val String = v.split(".")
+      val String = v.split("\\.")
       if (variable == String(1)){
         return String(0)  
       }
