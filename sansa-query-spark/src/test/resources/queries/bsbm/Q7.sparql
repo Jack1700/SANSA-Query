@@ -1,0 +1,9 @@
+SELECT ?product ?label
+	WHERE { 
+   ?product <http://www.w3.org/1999/02/22-rdf-syntax-ns#rdfs:label> ?label .
+   ?product a <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductType2241> . 
+   ?product <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature> <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature5964> . 
+   ?product <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productFeature> <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/ProductFeature53211> . 
+   ?product <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productPropertyNumeric1> ?value1 .
+       FILTER (?value1 > 126) 
+ }
