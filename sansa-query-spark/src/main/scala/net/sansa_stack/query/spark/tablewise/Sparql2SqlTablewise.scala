@@ -159,7 +159,6 @@ class Sparql2SqlTablewise {
         variables += (query.getName()+"."+v)
       }
     }
-    println("onPart2 :" + on)
     return on
   }
   
@@ -281,7 +280,7 @@ class Sparql2SqlTablewise {
       }
       
     }
-    return ""
+    return "FunctionFailed"
   }
   
 }

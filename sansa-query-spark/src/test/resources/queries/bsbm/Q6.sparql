@@ -9,8 +9,7 @@ PREFIX gr: <http://purl.org/goodrelations/v1#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bsbm: <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/>
-SELECT ?productLabel ?price ?vendor ?revTitle ?reviewer ?rating1 ?rating2 ?product ?revName
-WHERE {
+SELECT ?productLabel ?price ?vendor ?revTitle ?reviewer ?rating1 ?rating2 ?product ?revName WHERE {
     ?product rdfs:label ?productLabel .
     ?product rdf:type bsbm:Product .
     ?offer bsbm:product ?product .

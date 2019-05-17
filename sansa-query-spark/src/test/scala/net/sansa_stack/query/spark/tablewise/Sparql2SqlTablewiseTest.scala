@@ -21,7 +21,7 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
     val df = triples.toDF()
     
     // query from test resources 
-    val query = "src/test/resources/queries/bsbm/Q1.sparql"
+    val query = "src/test/resources/queries/bsbm/Q2.sparql"
     val fileContents = Source.fromFile(query).getLines.mkString
     
     // our translation 
@@ -37,7 +37,7 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
     val df = triples.toDF()
     
     // query from test resources 
-     val query = "src/test/resources/queries/bsbm/Q5.sparql"
+    val query = "src/test/resources/queries/bsbm/Q5.sparql"
     val fileContents = Source.fromFile(query).getLines.mkString
     
     // our translation 
