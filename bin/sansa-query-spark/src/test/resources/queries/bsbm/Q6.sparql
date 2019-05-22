@@ -1,0 +1,17 @@
+SELECT ?productLabel ?price ?vendor ?revTitle ?reviewer ?rating1 ?rating2 ?product ?revName WHERE {
+    ?product <http://www.w3.org/2000/01/rdf-schema#label> ?productLabel .
+    ?product <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/product> .
+    ?offer <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/product> ?product .
+    ?offer <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/price> ?price .
+    ?offer <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/vendor> ?vendor .
+    ?offer <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/validTo> ?date .
+    ?review <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/reviewFor> ?product .
+    ?review <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/reviewer> ?reviewer .
+    ?review <http://purl.org/dc/elements/1.1/title> ?revTitle .
+    ?review <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/rating1> ?rating1 .
+    ?review <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/rating2> ?rating2 .
+    ?reviewer <http://xmlns.com/foaf/spec/name> ?revName .
+    ?reviewer a <http://xmlns.com/foaf/spec/Person> .
+    FILTER(?product = 9)
+    FILTER(?price > 5000)
+}
