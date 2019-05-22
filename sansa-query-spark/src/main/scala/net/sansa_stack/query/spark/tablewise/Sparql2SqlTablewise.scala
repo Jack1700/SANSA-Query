@@ -16,6 +16,7 @@ import org.apache.spark.sql.DataFrame
 import scala.collection.immutable.Stack
 import scala.collection.mutable.ArrayStack
 import scala.collection.mutable.Queue
+import org.jgrapht.alg.scoring.BetweennessCentrality.MyQueue
 
 
 
@@ -68,16 +69,20 @@ class Sparql2SqlTablewise {
     
     if (!whereUsed) where = ""
 
-    
     val filterVariables = TripleGetter.getFilterVariables()
     var i = 0
     for(i <- 0 until filterVariables.size) {
       if(variables.contains(filterVariables(i))) {
+        var filterVariableColumn=""
+         if (filterVariables(i)== subject) filterVariableColumn="triples.s" 
+         else if (filterVariables(i)== predicate) filterVariableColumn="triples.p" 
+         else if (filterVariables(i)== _object) filterVariableColumn="triples.o" 
+       
         if(!whereUsed) {
-          where = "WHERE " + filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
+          where = "WHERE " + filterVariableColumn + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
           whereUsed = true
         } else {
-          where+= "AND "+ filterVariables(i) + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
+          where+= " AND "+ filterVariableColumn + " " + TripleGetter.getFilterOperators()(i) + " " + TripleGetter.getFilterValues()(i)
         }
       }
     }
@@ -230,6 +235,7 @@ class Sparql2SqlTablewise {
   def initQueryQueue(myQuery: Query): Queue[SubQuery] = {
     var queries: Queue[SubQuery] = new Queue[SubQuery]();
     TripleGetter.generateStringTriples(myQuery);
+    TripleGetter.generateFilters(myQuery);
     for (i <- 0 until TripleGetter.getSubjects().size) {
       val _newSubQuery: SubQuery = new SubQuery();
 
