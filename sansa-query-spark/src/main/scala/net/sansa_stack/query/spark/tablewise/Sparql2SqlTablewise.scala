@@ -26,12 +26,25 @@ class Sparql2SqlTablewise {
     
     val query = QueryFactory.create(queryString)
     val queries = initializeQueryQueue(query)
+    val select = generateSelect(query,queries,query.getProjectVars)
+    return select + JoinQueries2(queries,query.getProjectVars)
+  }
+  
+  def generateSelect(query: Query,queries: Queue[SubQuery], projectVariables: List[Var]): String = {
+    var mySelect = " " +
+    cleanProjectVariables(projectVariables, queries) + 
+    " FROM \n";
     
-    return JoinQueries2(queries,query.getProjectVars)
+    if(query.hasLimit())
+      return "SELECT TOP " + query.getLimit().toString() + mySelect
+    else
+      return "SELECT " + mySelect
   }
   
   
-  def for1Pattern(subject: String, predicate: String, _object: String, tableNum: Int, variables: HashSet[String]): String = {
+  def for1Pattern(subject: String,
+      predicate: String, _object: String, tableNum: Int,
+      variables: HashSet[String]): String = {
     var beforeWhere = false;
     var beforeSelect = false;
     var select = "SELECT ";
@@ -120,10 +133,7 @@ class Sparql2SqlTablewise {
   
   
   def JoinQueries2(queries: Queue[SubQuery], projectVariables: List[Var]): String = {
-    var Statement = "SELECT " + 
-    cleanProjectVariables(projectVariables, queries) + 
-    " FROM \n";
-    
+    var Statement = " "
     val Q0 = queries.dequeue()
     var variables = new ArrayBuffer[String]()
     

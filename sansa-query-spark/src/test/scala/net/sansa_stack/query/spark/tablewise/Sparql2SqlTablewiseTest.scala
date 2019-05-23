@@ -26,7 +26,7 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
     val df = triples.toDF()
 
     // Extracts the query from the test resources
-    val queryPath = "src/test/resources/queries/bsbm/Q8.sparql"
+    val queryPath = "src/test/resources/queries/bsbm/Q1.sparql"
     val fileContents = Source.fromFile(queryPath).getLines.mkString
 
     // Executes the Sparql query (result resultset in r)
