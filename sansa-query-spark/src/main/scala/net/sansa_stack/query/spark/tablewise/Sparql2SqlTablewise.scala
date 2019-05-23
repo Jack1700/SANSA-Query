@@ -4,23 +4,23 @@ import org.apache.jena.sparql.core.TriplePath
 import org.apache.jena.sparql.syntax.ElementPathBlock
 import org.apache.jena.sparql.syntax.ElementVisitorBase
 import org.apache.jena.sparql.syntax.ElementWalker
-import scala.collection.mutable.HashSet
-import scala.collection.mutable.ArrayBuffer
-import org.apache.jena.query.{ QueryExecutionFactory, QuerySolutionMap, QueryFactory }
-import scala.collection.mutable.Set
-import org.apache.jena.sparql.core.Var
-import java.util.List
-import org.apache.spark.sql.SparkSession
 import org.apache.jena.query.Query
+import org.apache.jena.query.{ QueryExecutionFactory, QuerySolutionMap, QueryFactory }
+import org.apache.jena.sparql.core.Var
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.DataFrame
-import scala.collection.immutable.Stack
+import scala.collection.mutable.HashSet
+import scala.collection.mutable.Set
+import java.util.List
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.ArrayStack
 import scala.collection.mutable.Queue
 import org.jgrapht.alg.scoring.BetweennessCentrality.MyQueue
-import net.sansa_stack.query.spark.tablewise.HelperFunctions
+
 
 class Sparql2SqlTablewise {
 
+  val methods = new HelperFunctions()
   
   def assembleQuery(queryString: String) : String = {
     
@@ -81,7 +81,7 @@ class Sparql2SqlTablewise {
     var i = 0
     for(i <- 0 until filterVariables.size) {
       if(variables.contains(filterVariables(i))) {
-        var filterVariableColumn=""
+        var filterVariableColumn = ""
 
          if (filterVariables(i)== subject) filterVariableColumn="CAST(triples.s AS float) "
          else if (filterVariables(i)== predicate) filterVariableColumn="CAST(triples.p AS float) "
@@ -111,7 +111,7 @@ class Sparql2SqlTablewise {
     for (v <- 0 until projectVariables.size()) {
       var variable = projectVariables.get(v).toString;
       variable = variable.substring(1,variable.size)
-      variables += getTablewithVariable(variable, SubQuerys) + "." + variable
+      variables += methods.getTablewithVariable(variable, SubQuerys) + "." + variable
     }
     return variables.toString.substring(12, variables.toString.size - 1);
   }
@@ -307,16 +307,6 @@ class Sparql2SqlTablewise {
 
   
   
-  def getTablewithVariable (variable: String, SubQuerys: Queue[SubQuery]): String = {
-    
-    var i=0
-    for (i <- 0 until SubQuerys.size) {
-      if(SubQuerys(i).getVariables().contains(variable)) {
-        return "Q" + i
-      }
-      
-    }
-    return "FunctionFailed"
-  }
+
   
 }
