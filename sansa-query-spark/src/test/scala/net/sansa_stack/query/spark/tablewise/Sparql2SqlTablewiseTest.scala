@@ -46,6 +46,18 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
     val query = "src/test/resources/queries/bsbm/Q5.sparql"
     val fileContents = Source.fromFile(query).getLines.mkString
 
+    
+    val defModel = ModelFactory.createDefaultModel();
+    val mymodel = defModel.read("src/test/resources/datasets/bsbm-sample.nt");
+    val sparqlQuery = QueryFactory.create(fileContents);
+    sparqlQuery.setPrefixMapping(PrefixMapping.Standard);
+    QueryFactory.parse(sparqlQuery, fileContents, "", Syntax.syntaxSPARQL_11);
+    val qexec = QueryExecutionFactory.create(sparqlQuery, mymodel);
+    val r = qexec.execSelect();
+    ResultSetFormatter.outputAsCSV(r); //prints out the result
+    println("this is number of rows with sparql " + r.getRowNumber() + "\n")
+    
+    
     // our translation
     val result = OurProgram.createQueryExecution(spark, fileContents)
     print(result.count())
@@ -84,7 +96,7 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
     val df = triples.toDF()
 
     // query from test resources
-    val queryPath = "src/test/resources/queries/bsbm/Q7.sparql"
+    val queryPath = "src/test/resources/queries/bsbm/Q8.sparql"
     val fileContents = Source.fromFile(queryPath).getLines.mkString
 
     val defModel = ModelFactory.createDefaultModel();
@@ -94,12 +106,15 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
     QueryFactory.parse(sparqlQuery, fileContents, "", Syntax.syntaxSPARQL_11);
     val qexec = QueryExecutionFactory.create(sparqlQuery, mymodel);
     val r = qexec.execSelect();
-    // ResultSetFormatter.outputAsCSV(r); //prints out the result
-    println("this is number of rows with sparql " + r.getRowNumber)
+    ResultSetFormatter.outputAsCSV(r); //prints out the result
+    println("this is number of rows with sparql " + r.getRowNumber + "\n")
 
     // our translation
 
     val result = OurProgram.createQueryExecution(spark, fileContents)
+    print(result.count())
     assert(result.count() == r.getRowNumber)
+//    assert(result.count() == 98)
+  
   }
 }
