@@ -27,7 +27,7 @@ class Sparql2SqlTablewise {
     var beforeWhere = false;
     var beforeSelect = false;
     var select = "SELECT ";
-    val from = " FROM triples ";
+    val From = " FROM triples ";
     var where = " WHERE "
     var whereUsed = false;
 
@@ -89,11 +89,13 @@ class Sparql2SqlTablewise {
     
     
     
-    return "  (" + select + from + where + ")"
+    return "  (" + select + From + where + ")"
   }
 
   
-  def cleanProjectVariables(projectVariables: List[Var], SubQuerys: Queue[SubQuery]): String = {
+  def cleanProjectVariables(projectVariables: List[Var],
+      SubQuerys: Queue[SubQuery]): String = {
+    
     var variables = new ArrayBuffer[String]();
     var v = 0;
     for (v <- 0 until projectVariables.size()) {
@@ -108,6 +110,7 @@ class Sparql2SqlTablewise {
   def Sparql2SqlTablewise(QueryString: String): String = {
     val query = QueryFactory.create(QueryString);
     val queries = initQueryQueue(query);
+    
     return JoinQueries2(queries,query.getProjectVars);
 
   }
@@ -115,7 +118,10 @@ class Sparql2SqlTablewise {
   
   
   def JoinQueries2(queries: Queue[SubQuery], projectVariables: List[Var]): String = {
-    var Statement = "SELECT " + cleanProjectVariables(projectVariables, queries) + " FROM \n";
+    var Statement = "SELECT " + 
+    cleanProjectVariables(projectVariables, queries) + 
+    " FROM \n";
+    
     val Q0 = queries.dequeue()
     var variables = new ArrayBuffer[String]()
     
@@ -135,7 +141,11 @@ class Sparql2SqlTablewise {
       }
       if (vFound){
         
-        Statement += "INNER JOIN " + Q.getQuery() + Q.getName() + onPart2(Q, variables) + "\n";
+        Statement += "INNER JOIN " + 
+                      Q.getQuery() + 
+                      Q.getName() + 
+                      onPart2(Q, variables) +
+                      "\n";
       }
       else{
         queries.enqueue(Q)
@@ -199,7 +209,9 @@ class Sparql2SqlTablewise {
     *
     */
 
-    var Statement = "SELECT " + cleanProjectVariables(projectVariables, queries) + " FROM \n";
+    var Statement = "SELECT " +
+                    cleanProjectVariables(projectVariables, queries) +
+                    " FROM \n";
     val Q0 = queries.dequeue()
     var variables = new ArrayBuffer[String]();
     Statement += Q0.getQuery() + " Q0 \n";
@@ -207,9 +219,17 @@ class Sparql2SqlTablewise {
     for (i <- 0 until queries.size) {
       val Q = queries(i);
       if (i == 0) {
-        Statement += "INNER JOIN " + Q.getQuery() + " Q1 " + onPart(Q0, queries(i), "Q0", "Q1") + "\n";
+        Statement += "INNER JOIN " +
+                      Q.getQuery() +
+                      " Q1 " +
+                      onPart(Q0, queries(i), "Q0", "Q1") +
+                      "\n";
       } else {
-        Statement += "INNER JOIN " + Q.getQuery() + " Q" + (i + 1) + onPart(queries(i - 1), queries(i), "Q" + i, "Q" + (i + 1)) + "\n";
+        Statement += "INNER JOIN " +
+                     Q.getQuery() +
+                     " Q" + (i + 1) +
+                     onPart(queries(i - 1), queries(i), "Q" + i, "Q" + (i + 1)) +
+                     "\n";
       }
     }
     return Statement;
@@ -217,9 +237,11 @@ class Sparql2SqlTablewise {
 
   
   def onPart(q1: SubQuery, q2: SubQuery, name1: String, name2: String): String = {
+    
     var joinVariables = q1.getVariables().intersect(q2.getVariables()).toList;
     var onPart = " ON "
     var i = 0;
+    
     for (i <- 0 until joinVariables.size) {
       onPart += name1 + "." + joinVariables(i) + "=" + name2 + "." + joinVariables(i)
       if (i != joinVariables.size - 1) {
@@ -233,30 +255,42 @@ class Sparql2SqlTablewise {
 
   
   def initQueryQueue(myQuery: Query): Queue[SubQuery] = {
+    
     var queries: Queue[SubQuery] = new Queue[SubQuery]();
+    
     TripleGetter.generateStringTriples(myQuery);
     TripleGetter.generateFilters(myQuery);
+    
     for (i <- 0 until TripleGetter.getSubjects().size) {
+      
       val _newSubQuery: SubQuery = new SubQuery();
-
       val _subject = TripleGetter.getSubjects()(i);
       val _predicate = TripleGetter.getPredicates()(i);
       val _object = TripleGetter.getObjects()(i)
+      
       //check Subject is a Variable
       if (_subject(0) != '"') {
         _newSubQuery.appendVariable(_subject);
       }
+      
       //check Predicate is a Variable
       if (_predicate(0) != '"') {
         _newSubQuery.appendVariable(_predicate);
       }
+      
       //check Object is a Variable
       if (_object(0) != '"') {
         _newSubQuery.appendVariable(_object);
       }
+      
       _newSubQuery.setName("Q" + i);
-      _newSubQuery.setQuery(for1Pattern(_subject, _predicate, _object, i, _newSubQuery.getVariables()))
-
+      _newSubQuery.setQuery(for1Pattern(_subject,
+                                        _predicate, 
+                                        _object, 
+                                        i,
+                                        _newSubQuery.getVariables()
+                                     )
+                               )
       
       queries.enqueue(_newSubQuery);
 
