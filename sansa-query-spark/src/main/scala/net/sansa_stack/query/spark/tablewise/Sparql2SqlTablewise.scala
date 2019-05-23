@@ -17,7 +17,7 @@ import scala.collection.immutable.Stack
 import scala.collection.mutable.ArrayStack
 import scala.collection.mutable.Queue
 import org.jgrapht.alg.scoring.BetweennessCentrality.MyQueue
-
+import net.sansa_stack.query.spark.tablewise.HelperFunctions
 
 class Sparql2SqlTablewise {
 
