@@ -82,9 +82,11 @@ class Sparql2SqlTablewise {
     for(i <- 0 until filterVariables.size) {
       if(variables.contains(filterVariables(i))) {
         var filterVariableColumn=""
-         if (filterVariables(i)== subject) filterVariableColumn="triples.s" 
-         else if (filterVariables(i)== predicate) filterVariableColumn="triples.p" 
-         else if (filterVariables(i)== _object) filterVariableColumn="triples.o" 
+
+         if (filterVariables(i)== subject) filterVariableColumn="CAST(triples.s AS float) "
+         else if (filterVariables(i)== predicate) filterVariableColumn="CAST(triples.p AS float) "
+         else if (filterVariables(i)== _object) filterVariableColumn="CAST(triples.o AS float) "
+
        
         if(!whereUsed) {
           where = "WHERE " + filterVariableColumn + " " + SparqlAnalyzer.filterOperators(i) + " " + SparqlAnalyzer.filterValues(i)

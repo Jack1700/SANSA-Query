@@ -15,11 +15,10 @@ import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import net.sansa_stack.rdf.spark.io._
 import net.sansa_stack.rdf.spark.model._
 
-
 class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
 
   test("test 1") {
-    
+
     // This Test executes the Sparql query and the translated SQL version and compares the results
     val OurProgram = new Interface()
     val input = getClass.getResource("/datasets/bsbm-sample.nt").getPath
@@ -51,10 +50,13 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
     val result = OurProgram.createQueryExecution(spark, fileContents)
     println(OurProgram.Sparql2SqlTablewise(fileContents))
 
+    val TestQuery = spark.sql("""SELECT Q0.product , Q0.value1, CAST(Q0.value1 AS INT) FROM 
+  (SELECT  triples.s AS product  ,  triples.o AS value1  FROM triples  WHERE  triples.p="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productPropertyNumeric1") Q0 """)
 
+    TestQuery.collect.foreach(println)
     // Compares both results
     println("Sparql: " + r.getRowNumber())
     val intersection = result.intersect(sparqlDataFrame)
-    assert(result.count() == sparqlDataFrame.count() && result.count() == intersection.count() )
+    assert(result.count() == sparqlDataFrame.count() && result.count() == intersection.count())
   }
 }
