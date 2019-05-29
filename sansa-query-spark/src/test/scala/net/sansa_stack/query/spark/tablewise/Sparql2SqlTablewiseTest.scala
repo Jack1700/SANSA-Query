@@ -14,7 +14,8 @@ import org.scalatest.FunSuite
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import net.sansa_stack.rdf.spark.io._
 import net.sansa_stack.rdf.spark.model._
-
+import org.apache.jena.graph.Node
+import org.apache.commons.rdf.api.Triple
 
 class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
 
@@ -23,11 +24,15 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
     // This Test executes the Sparql query and the translated SQL version and compares the results
     val OurProgram = new Interface()
     val input = getClass.getResource("/datasets/bsbm-sample.nt").getPath
-    val triples = spark.rdf(Lang.NTRIPLES)(input)
+    var triples = spark.rdf(Lang.NTRIPLES)(input)
+
+   // val newTriples = triples.map(t => {(t.getSubject().toString().split("\\^^")(0),t.getPredicate().toString().split("\\^^")(0),t.getObject().toString().split("\\^")(0)) })
+    
+    val newTriples = triples.map(t => {(t.getSubject().getLiteral().getLexicalForm,t.getPredicate().getLiteral().getLexicalForm,t.getObject().getLiteral().getLexicalForm) })
     val df = triples.toDF()
 
     // Extracts the query from the test resources
-    val queryPath = "src/test/resources/queries/bsbm/Q1.sparql"
+    val queryPath = "src/test/resources/queries/bsbm/Q8.sparql"
     val fileContents = Source.fromFile(queryPath).getLines.mkString
 
     // Executes the Sparql query (result resultset in r)
