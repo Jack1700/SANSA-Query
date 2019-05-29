@@ -103,14 +103,19 @@ class Sparql2SqlTablewise {
   
   def generateSelect(query: Query, queries: Queue[SubQuery], projectVariables: List[Var]) : String = {
     
-    var mySelect = " " +
-      methods.cleanProjectVariables(projectVariables, queries) + 
-      " FROM \n";
+    var select = "SELECT "
     
-    if (query.hasLimit())
-      return "SELECT TOP " + query.getLimit().toString() + mySelect
-    else
-      return "SELECT " + mySelect
+    if (query.isDistinct()) {
+      select += "DISTINCT " 
+    }
+    
+    if (query.hasLimit()) {
+      select += "TOP " + query.getLimit().toString() + " "
+    }
+    
+    select += methods.cleanProjectVariables(projectVariables, queries) + " FROM \n"
+    
+    return select
   }
   
   
