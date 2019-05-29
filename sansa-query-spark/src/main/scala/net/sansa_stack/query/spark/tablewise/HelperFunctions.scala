@@ -31,7 +31,7 @@ class HelperFunctions {
     var i = 0
     
     for (i <- 0 until SubQuerys.size) {
-      if (SubQuerys(i).getVariables().contains(variable)) {
+      if (SubQuerys(i).variables.contains(variable)) {
         return "Q" + i
       }
     }
@@ -53,8 +53,4 @@ class HelperFunctions {
   }
     
     
-    
-    
-    
-  
 }

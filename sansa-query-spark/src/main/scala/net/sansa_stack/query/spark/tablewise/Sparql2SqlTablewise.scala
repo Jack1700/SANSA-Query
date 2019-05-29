@@ -60,7 +60,7 @@ class Sparql2SqlTablewise {
         newSubQuery.variables += Object
       }
       
-      newSubQuery.sName = "Q" + i
+      newSubQuery.sName = ("Q" + i)
       newSubQuery.sQuery = translateSingleBgp(subject,
                                        predicate, 
                                        Object, 
@@ -76,7 +76,7 @@ class Sparql2SqlTablewise {
     
   def generateJoinConditions(query: SubQuery, variables: ArrayBuffer[String]) : String = {
     
-    var queryVariables = ArrayBuffer(query.getVariables().toArray: _*)
+    var queryVariables = ArrayBuffer(query.variables.toArray: _*)
     var on = " ON "
     var onUsed = false
     
@@ -115,13 +115,13 @@ class Sparql2SqlTablewise {
   
   
   def translateSingleBgp(subject: String,
-    predicate: String, _object: String, tableNum: Int,
+    predicate: String, Object: String, tableNum: Int,
     variables: HashSet[String]) : String = {
     
     var beforeWhere = false
     var beforeSelect = false
     var select = "SELECT "
-    val From = " FROM triples "
+    val from = " FROM triples "
     var where = " WHERE "
     var whereUsed = false
 
@@ -148,15 +148,15 @@ class Sparql2SqlTablewise {
 
     }
 
-    if (_object(0) == '"') {
+    if (Object(0) == '"') {
       if (beforeWhere)
         where += " AND "
-      where += " triples.o= " + _object;
+      where += " triples.o= " + Object;
       whereUsed = true
     } else {
       if (beforeSelect)
         select += " , "
-      select += " triples.o AS " + _object + " "
+      select += " triples.o AS " + Object + " "
     }
     
     if (!whereUsed) {
@@ -166,64 +166,60 @@ class Sparql2SqlTablewise {
     val filterVariables = SparqlAnalyzer.filterVariables
     var i = 0
     
-    for(i <- 0 until filterVariables.size) {
+    for (i <- 0 until filterVariables.size) {
       
-      if(variables.contains(filterVariables(i))) {
+      if (variables.contains(filterVariables(i))) {
         
         var filterVariableColumn = ""
 
-         if (filterVariables(i)== subject) filterVariableColumn="CAST(triples.s AS float) "
-         else if (filterVariables(i)== predicate) filterVariableColumn="CAST(triples.p AS float) "
-         else if (filterVariables(i)== _object) filterVariableColumn="CAST(triples.o AS float) "
+         if (filterVariables(i) == subject) filterVariableColumn = "CAST(triples.s AS float) "
+         else if (filterVariables(i) == predicate) filterVariableColumn = "CAST(triples.p AS float) "
+         else if (filterVariables(i) == Object) filterVariableColumn = "CAST(triples.o AS float) "
 
-       
-        if(!whereUsed) {
+        if (!whereUsed) {
           where = "WHERE " + filterVariableColumn + " " + SparqlAnalyzer.filterOperators(i) + " " + SparqlAnalyzer.filterValues(i)
           whereUsed = true
         } else {
-          where+= " AND "+ filterVariableColumn + " " + SparqlAnalyzer.filterOperators(i) + " " + SparqlAnalyzer.filterValues(i)
+          where += " AND " + filterVariableColumn + " " + SparqlAnalyzer.filterOperators(i) + " " + SparqlAnalyzer.filterValues(i)
         }
       }
     }
     
-    
-    
-    return "  (" + select + From + where + ")"
+    return "  (" + select + from + where + ")"
   }
 
 
-
-
-  
-  
-  def JoinQueries(queries: Queue[SubQuery], projectVariables: List[Var]): String = {
+  def JoinQueries(queries: Queue[SubQuery], projectVariables: List[Var]) : String = {
+    
     var Statement = " "
     val Q0 = queries.dequeue()
     var variables = new ArrayBuffer[String]()
     
-    for (variable <- Q0.getVariables()){
-      variables += ("Q0."+variable)
+    for (variable <- Q0.variables){
+      variables += ("Q0." + variable)
     }
-    Statement += Q0.getQuery() + " Q0 \n";
+    Statement += Q0.sQuery + " Q0 \n";
     
-    while(!queries.isEmpty){
+    while (!queries.isEmpty) {
+      
       var Q = queries.dequeue()
       var vFound = false
-      for (variable <- Q.getVariables()){
+      
+      for (variable <- Q.variables){
         
-        if ((methods.containsVariable(variable, variables)!=null)){
+        if (methods.containsVariable(variable, variables) != null) {
           vFound = true
         }
       }
-      if (vFound){
+      
+      if (vFound) {
         
         Statement += "INNER JOIN " + 
-                      Q.getQuery() + 
-                      Q.getName() + 
+                      Q.sQuery + 
+                      Q.sName + 
                       generateJoinConditions(Q, variables) +
-                      "\n";
-      }
-      else{
+                      "\n" }
+      else {
         queries.enqueue(Q)
       }
     }
@@ -231,10 +227,6 @@ class Sparql2SqlTablewise {
     return Statement
     
   }
-
-  
-  
-  
   
   
 }
