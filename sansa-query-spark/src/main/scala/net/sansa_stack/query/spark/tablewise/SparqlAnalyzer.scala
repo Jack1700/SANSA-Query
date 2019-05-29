@@ -23,6 +23,11 @@ object SparqlAnalyzer {
   var filterOperators = new ArrayBuffer[String]();
 
   
+  /*
+  Translates a Sparql query tablewise into SQL
+  
+  Given: Sparql query string
+  */
   def generateFilters(query: Query) : Unit = {
     
     filterVariables.clear

@@ -9,6 +9,11 @@ import java.util.List
 class HelperFunctions {
   
   
+  /*
+  Converts a project variable like ?x into a for SQL usable format like Q0.x where Q0 is the corresponding BGP
+  
+  Given: List of project variables, List of BGP's (as SubQueries)
+  */
   def cleanProjectVariables(projectVariables: List[Var], SubQuerys: Queue[SubQuery]): String = {
     
     var variables = new ArrayBuffer[String]()
@@ -19,14 +24,19 @@ class HelperFunctions {
       var variable = projectVariables.get(v).toString
       
       variable = variable.substring(1,variable.size)
-      variables += getTablewithVariable(variable, SubQuerys) + "." + variable
+      variables += getBgpWithVariable(variable, SubQuerys) + "." + variable
     }
     
     return variables.toString.substring(12, variables.toString.size - 1);
   }  
   
   
-  def getTablewithVariable (variable: String, SubQuerys: Queue[SubQuery]) : String = {
+  /*
+  Finds the number of the BGP where the variable first appears
+  
+  Given: a Variable as a String, List of BGP's (as SubQueries)
+  */
+  def getBgpWithVariable (variable: String, SubQuerys: Queue[SubQuery]) : String = {
   
     var i = 0
     
@@ -39,7 +49,12 @@ class HelperFunctions {
   }
   
   
-  def containsVariable(variable: String, variables: ArrayBuffer[String]): String = {
+  /*
+  Finds a variable in an Array of variables (like Q0.x) and returns it's prefix (like Q0)
+    
+  Given: a variable and an Array of variables
+  */
+  def getTableWithVariable(variable: String, variables: ArrayBuffer[String]): String = {
     
     for (v <- variables) {
       val str = v.split("\\.")

@@ -27,10 +27,11 @@ class Sparql2SqlTablewise {
   def assembleQuery(queryString: String) : String = {
     
     val query = QueryFactory.create(queryString)
+    val returnVariables = query.getProjectVars()
     val queries = initializeQueryQueue(query)
-    val select = generateSelect(query,queries,query.getProjectVars)
+    val select = generateSelect(query,queries, returnVariables)
     
-    return select + JoinQueries(queries,query.getProjectVars)
+    return select + JoinQueries(queries, returnVariables)
   }
   
   
@@ -82,7 +83,7 @@ class Sparql2SqlTablewise {
     
     for (v <- queryVariables) {
       
-      var name = methods.containsVariable(v, variables)
+      var name = methods.getTableWithVariable(v, variables)
       
       if (name != null) {
         
@@ -212,7 +213,7 @@ class Sparql2SqlTablewise {
       
       for (variable <- Q.variables){
         
-        if (methods.containsVariable(variable, variables) != null) {
+        if (methods.getTableWithVariable(variable, variables) != null) {
           vFound = true
         }
       }
