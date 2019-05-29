@@ -10,9 +10,6 @@ class SubQuery{
   var sName : String = "";
   var sQuery: String = "";
   
-  def appendVariable(variable:String):Unit = {
-    variables += variable;
-  }
   
   def setVariables(myVariables:HashSet[String]):Unit = {
     this.variables = myVariables;

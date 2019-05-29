@@ -7,8 +7,6 @@ import org.apache.jena.query.{ QueryExecutionFactory, QuerySolutionMap, QueryFac
 
 class Interface {
   
-  val translator = new Sparql2SqlTablewise()
-
   
   /*
   Translates and executes a Sparql query tablewise in SQL and returns the dataframe
@@ -30,9 +28,10 @@ class Interface {
   Given: Sparql query string
   */
   def Sparql2SqlTablewise(queryString: String) : String = {
-    
-    return translator.assembleQuery(queryString)
 
+    val translator = new Sparql2SqlTablewise()
+
+    return translator.assembleQuery(queryString)
   }
   
   

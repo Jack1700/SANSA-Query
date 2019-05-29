@@ -9,17 +9,19 @@ import java.util.List
 class HelperFunctions {
   
   
-  def cleanProjectVariables(projectVariables: List[Var],
-      SubQuerys: Queue[SubQuery]): String = {
+  def cleanProjectVariables(projectVariables: List[Var], SubQuerys: Queue[SubQuery]): String = {
     
-    
-    var variables = new ArrayBuffer[String]();
+    var variables = new ArrayBuffer[String]()
     var v = 0;
+    
     for (v <- 0 until projectVariables.size) {
-      var variable = projectVariables.get(v).toString;
+      
+      var variable = projectVariables.get(v).toString
+      
       variable = variable.substring(1,variable.size)
       variables += getTablewithVariable(variable, SubQuerys) + "." + variable
     }
+    
     return variables.toString.substring(12, variables.toString.size - 1);
   }  
   
@@ -36,6 +38,19 @@ class HelperFunctions {
     return "FunctionFailed"
   }
   
+  
+  def containsVariable(variable: String, variables: ArrayBuffer[String]): String = {
+    
+    for (v <- variables) {
+      val str = v.split("\\.")
+      
+      if (variable == str(1)) {
+        return str(0)  
+      }
+    }
+    
+    return null
+  }
     
     
     
