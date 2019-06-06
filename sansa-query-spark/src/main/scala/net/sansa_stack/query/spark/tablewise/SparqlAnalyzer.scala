@@ -26,45 +26,22 @@ object SparqlAnalyzer {
   var filterOperators = new ArrayBuffer[String]
   
   
+  /*
+  Analyzes the given query and makes sure, all the necessary Array's are initialized in the correct order
   
-  def initialize(query: Query) : Unit = {
+  Given: Jena Sparql Query
+  */
+  def analyze(query: Query) : Unit = {
     generateStringTriples(query)
     generateFilter(query)
     generateOptionals(query)
   }  
   
-
-   /*
-  Extracts all filters from the query
-    
-  Given: Sparql query
-  */
-  def generateFilter(query: Query) : Unit = {
-
-    filterVariables.clear
-    filterOperators.clear
-    filterValues.clear
-    ElementWalker.walk(
-      query.getQueryPattern(),
-      new ElementVisitorBase() {
-
-        override def visit(element: ElementFilter): Unit = {
-
-          var el = element.getExpr().toString()
-          var variable = element.getExpr.getVarsMentioned.toString()
-
-          filterOperators += el.charAt(1).toString();
-          filterValues += el.split(" ")(2).substring(0, el.split(" ")(2).size - 1);
-          filterVariables += variable.substring(2, variable.size - 1);
-        }
-      })
-  }
-  
   
   /*
   Extracts all triples from the query and saves them in three Arrays containing all subjects, objects and predicates from the BGPs 
     
-  Given: Sparql query
+  Given: Jena Sparql query
   */
   def generateStringTriples(query: Query): Unit = {
 
@@ -73,17 +50,17 @@ object SparqlAnalyzer {
     objects.clear
 
     ElementWalker.walk(
-      query.getQueryPattern(),
-      new ElementVisitorBase() {
+      query.getQueryPattern,
+      new ElementVisitorBase {
 
         override def visit(el: ElementPathBlock): Unit = {
 
-          val triples = el.patternElts()
-          while (triples.hasNext()) {
-            val triple = triples.next()
-            val subject = triple.getSubject().toString()
-            val Object = triple.getObject().toString();
-            val predicate = triple.getPredicate().toString();
+          val triples = el.patternElts
+          while (triples.hasNext) {
+            val triple = triples.next
+            val subject = triple.getSubject.toString
+            val Object = triple.getObject.toString
+            val predicate = triple.getPredicate.toString
 
             if (subject(0) == '?')
               subjects += subject.substring(1)
@@ -107,17 +84,44 @@ object SparqlAnalyzer {
   
   
   /*
-  
+  Extracts all filters from the query
     
-  Given: 
+  Given: Jena Sparql query
+  */
+  def generateFilter(query: Query) : Unit = {
+
+    filterVariables.clear
+    filterOperators.clear
+    filterValues.clear
+    ElementWalker.walk(
+      query.getQueryPattern,
+      new ElementVisitorBase {
+
+        override def visit(element: ElementFilter): Unit = {
+
+          var el = element.getExpr.toString
+          var variable = element.getExpr.getVarsMentioned.toString
+
+          filterOperators += el.charAt(1).toString
+          filterValues += el.split(" ")(2).substring(0, el.split(" ")(2).size - 1)
+          filterVariables += variable.substring(2, variable.size - 1)
+        }
+      })
+  }
+  
+  
+  /*
+  Determines, which BGP's are part of an optional
+    
+  Given: Jena Sparql Query
   */
   def generateOptionals(query: Query) : Unit = {
 
     optionalIndices.clear
     
     ElementWalker.walk(
-      query.getQueryPattern(),
-      new ElementVisitorBase() {
+      query.getQueryPattern,
+      new ElementVisitorBase {
 
         override def visit(el: ElementOptional): Unit = {
 

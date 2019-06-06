@@ -11,7 +11,7 @@ class Interface {
   /*
   Translates and executes a Sparql query tablewise in SQL and returns the dataframe
   
-  Given: Spark session, Sparql query string
+  Given: Spark session; Sparql query string
   */
   def createQueryExecution(spark: SparkSession, queryString: String) : DataFrame = {
     
@@ -29,7 +29,7 @@ class Interface {
   */
   def Sparql2SqlTablewise(queryString: String) : String = {
 
-    val translator = new Sparql2SqlTablewise()
+    val translator = new Sparql2SqlTablewise
 
     return translator.assembleQuery(queryString)
   }

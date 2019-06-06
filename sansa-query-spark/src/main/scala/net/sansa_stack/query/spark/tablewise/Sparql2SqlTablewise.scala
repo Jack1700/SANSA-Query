@@ -21,39 +21,39 @@ import org.jgrapht.alg.scoring.BetweennessCentrality.MyQueue
 class Sparql2SqlTablewise {
 
   
-  val methods = new HelperFunctions()
+  val methods = new HelperFunctions
   
   
   /*
-  Takes a Sparql query in form of a string and returns the same query in Sql
+  Takes a Sparql query in form of a string and returns the same query in Sql code
   
   Given: Sparql query string
-   */
+  */
   def assembleQuery(queryString: String) : String = {
     
     val query = QueryFactory.create(queryString)
-    val returnVariables = query.getProjectVars()
+    val returnVariables = query.getProjectVars
     val queries = initializeQueryQueue(query)
     val select = generateSelect(query,queries, returnVariables)
     
-    return select + JoinQueries(queries, returnVariables) + checkLimit(query)
+    return select + JoinQueries(queries) + generateLimit(query)
   }
   
   
   /*
   Creates a queue of subqueries from a given Sparql query
   
-  Given: a Jena Sparql query
-   */
+  Given: Jena Sparql Query
+  */
   def initializeQueryQueue(myQuery: Query) : Queue[SubQuery] = {
     
-    var queries: Queue[SubQuery] = new Queue[SubQuery]()
+    var queries: Queue[SubQuery] = new Queue[SubQuery]
     
-    SparqlAnalyzer.initialize(myQuery)
+    SparqlAnalyzer.analyze(myQuery)
     
     for (i <- 0 until SparqlAnalyzer.subjects.size) {
       
-      val newSubQuery: SubQuery = new SubQuery()
+      val newSubQuery: SubQuery = new SubQuery
       val subject = SparqlAnalyzer.subjects(i)
       val predicate = SparqlAnalyzer.predicates(i)
       val Object = SparqlAnalyzer.objects(i)
@@ -91,8 +91,8 @@ class Sparql2SqlTablewise {
   /*
   Creates the join condition for a specific subquery and returns it as a string
   
-  Given: 
-   */
+  Given: Subquery; Table of variables, with their first occurrence
+  */
   def generateJoinConditions(query: SubQuery, variables: ArrayBuffer[String]) : String = {
     
     var queryVariables = ArrayBuffer(query.variables.toArray: _*)
@@ -120,23 +120,33 @@ class Sparql2SqlTablewise {
   }
   
   
-  def checkLimit(myQuery: Query) : String = {
+  /*
+  Creates the limit part of the Sql query if needed
+  
+  Given: Jena Sparql Query
+  */
+  def generateLimit(myQuery: Query) : String = {
     
     var limit = ""
     
-    if (myQuery.hasLimit()) {
-      limit = "LIMIT " + myQuery.getLimit()
+    if (myQuery.hasLimit) {
+      limit = "LIMIT " + myQuery.getLimit
     }
     
     return limit
   }
   
   
+  /*
+  Creates the corresponding Select part of the Sql query
+  
+  Given: Jena Sparql Query; Queue of all Subqueries; List of variables, selected in main query
+  */
   def generateSelect(query: Query, queries: Queue[SubQuery], projectVariables: List[Var]) : String = {
     
     var select = "SELECT "
     
-    if (query.isDistinct()) {
+    if (query.isDistinct) {
       select += "DISTINCT " 
     }
     
@@ -146,6 +156,11 @@ class Sparql2SqlTablewise {
   }
   
   
+  /*
+  Translates a single BGP into Sql
+  
+  Given: Subject; Predicate; Object; Number that will be the Name of the current Subquery; List of Variables and their first occurrence
+  */
   def translateSingleBgp(subject: String,
     predicate: String, Object: String, tableNum: Int,
     variables: HashSet[String]) : String = {
@@ -183,7 +198,7 @@ class Sparql2SqlTablewise {
     if (Object(0) == '"') {
       if (beforeWhere)
         where += " AND "
-      where += " triples.o= " + Object;
+      where += " triples.o= " + Object
       whereUsed = true
     } else {
       if (beforeSelect)
@@ -221,20 +236,25 @@ class Sparql2SqlTablewise {
   }
 
 
-  def JoinQueries(queries: Queue[SubQuery], projectVariables: List[Var]) : String = {
+  /*
+  Creates the main body if the Sql query by chaining all subqueries together
+  
+  Given: Queue of all Subqueries; 
+  */
+  def JoinQueries(queries: Queue[SubQuery]) : String = {
     
     var Statement = " "
-    val Q0 = queries.dequeue()
-    var variables = new ArrayBuffer[String]()
+    val Q0 = queries.dequeue
+    var variables = new ArrayBuffer[String]
     
     for (variable <- Q0.variables){
       variables += ("Q0." + variable)
     }
-    Statement += Q0.sQuery + " Q0 \n";
+    Statement += Q0.sQuery + " Q0 \n"
     
     while (!queries.isEmpty) {
       
-      var Q = queries.dequeue()
+      var Q = queries.dequeue
       var vFound = false
       
       for (variable <- Q.variables){
@@ -261,7 +281,6 @@ class Sparql2SqlTablewise {
     }
     
     return Statement
-    
   }
   
   
