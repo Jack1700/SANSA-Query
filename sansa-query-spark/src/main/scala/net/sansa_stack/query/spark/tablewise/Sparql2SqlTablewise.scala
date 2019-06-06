@@ -36,7 +36,7 @@ class Sparql2SqlTablewise {
     val queries = initializeQueryQueue(query)
     val select = generateSelect(query,queries, returnVariables)
     
-    return select + JoinQueries(queries, returnVariables)
+    return select + JoinQueries(queries, returnVariables) + checkLimit(query)
   }
   
   
@@ -50,8 +50,6 @@ class Sparql2SqlTablewise {
     var queries: Queue[SubQuery] = new Queue[SubQuery]()
     
     SparqlAnalyzer.initialize(myQuery)
-    SparqlAnalyzer.optionalIndices.foreach(println)
-
     
     for (i <- 0 until SparqlAnalyzer.subjects.size) {
       
@@ -122,16 +120,24 @@ class Sparql2SqlTablewise {
   }
   
   
+  def checkLimit(myQuery: Query) : String = {
+    
+    var limit = ""
+    
+    if (myQuery.hasLimit()) {
+      limit = "LIMIT " + myQuery.getLimit()
+    }
+    
+    return limit
+  }
+  
+  
   def generateSelect(query: Query, queries: Queue[SubQuery], projectVariables: List[Var]) : String = {
     
     var select = "SELECT "
     
     if (query.isDistinct()) {
       select += "DISTINCT " 
-    }
-    
-    if (query.hasLimit()) {
-      select += "TOP " + query.getLimit().toString() + " "
     }
     
     select += methods.cleanProjectVariables(projectVariables, queries) + " FROM \n"
