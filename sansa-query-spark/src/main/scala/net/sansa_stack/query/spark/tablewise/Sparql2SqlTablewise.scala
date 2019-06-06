@@ -41,6 +41,7 @@ class Sparql2SqlTablewise {
     
     SparqlAnalyzer.generateStringTriples(myQuery)
     SparqlAnalyzer.generateFilters(myQuery)
+    SparqlAnalyzer.generateStringOptionalTriples(myQuery)
     
     for (i <- 0 until SparqlAnalyzer.subjects.size) {
       
