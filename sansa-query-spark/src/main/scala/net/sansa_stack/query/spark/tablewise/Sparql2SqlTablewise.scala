@@ -29,8 +29,17 @@ class Sparql2SqlTablewise {
     val query = QueryFactory.create(queryString)
     val queries = initializeQueryQueue(query)
     val select = generateSelect(query,queries,query.getProjectVars)
+    val limit = checkLimit(query)
     
-    return select + JoinQueries(queries,query.getProjectVars)
+    return select + JoinQueries(queries,query.getProjectVars) + limit
+  }
+  
+  def checkLimit(myQuery: Query): String = {
+    var limit = ""
+    if (myQuery.hasLimit()) {
+      limit = "LIMIT " + myQuery.getLimit()
+    }
+    return limit
   }
   
   
@@ -110,11 +119,7 @@ class Sparql2SqlTablewise {
       select += "DISTINCT " 
     }
     
-    if (query.hasLimit()) {
-      select += "TOP " + query.getLimit().toString() + " "
-    }
-    
-    select += methods.cleanProjectVariables(projectVariables, queries) + " FROM \n"
+    select += methods.cleanProjectVariables(projectVariables, queries) + " FROM\n"
     
     return select
   }
