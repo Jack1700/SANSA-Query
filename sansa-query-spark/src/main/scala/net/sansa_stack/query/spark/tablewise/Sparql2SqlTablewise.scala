@@ -24,6 +24,11 @@ class Sparql2SqlTablewise {
   val methods = new HelperFunctions()
   
   
+  /*
+  Takes a Sparql query in form of a string and returns the same query in Sql
+  
+  Given: Sparql query string
+   */
   def assembleQuery(queryString: String) : String = {
     
     val query = QueryFactory.create(queryString)
@@ -35,13 +40,18 @@ class Sparql2SqlTablewise {
   }
   
   
+  /*
+  Creates a queue of subqueries from a given Sparql query
+  
+  Given: a Jena Sparql query
+   */
   def initializeQueryQueue(myQuery: Query) : Queue[SubQuery] = {
     
     var queries: Queue[SubQuery] = new Queue[SubQuery]()
     
-    SparqlAnalyzer.generateStringTriples(myQuery)
-    SparqlAnalyzer.generateFilters(myQuery)
-    SparqlAnalyzer.generateStringOptionalTriples(myQuery)
+    SparqlAnalyzer.initialize(myQuery)
+    SparqlAnalyzer.optionalIndices.foreach(println)
+
     
     for (i <- 0 until SparqlAnalyzer.subjects.size) {
       
@@ -49,6 +59,10 @@ class Sparql2SqlTablewise {
       val subject = SparqlAnalyzer.subjects(i)
       val predicate = SparqlAnalyzer.predicates(i)
       val Object = SparqlAnalyzer.objects(i)
+      
+      if(SparqlAnalyzer.optionalIndices.contains(i)) {
+        newSubQuery.isOptional = true
+      }
       
       if (subject(0) != '"') {
         newSubQuery.variables += subject
@@ -75,7 +89,12 @@ class Sparql2SqlTablewise {
     return queries
   }
   
-    
+  
+  /*
+  Creates the join condition for a specific subquery and returns it as a string
+  
+  Given: 
+   */
   def generateJoinConditions(query: SubQuery, variables: ArrayBuffer[String]) : String = {
     
     var queryVariables = ArrayBuffer(query.variables.toArray: _*)
@@ -221,8 +240,12 @@ class Sparql2SqlTablewise {
       
       if (vFound) {
         
-        Statement += "INNER JOIN " + 
-                      Q.sQuery + 
+        if (Q.isOptional)
+          Statement += "LEFT JOIN "
+        else
+          Statement += "INNER JOIN "
+          
+        Statement +=  Q.sQuery + 
                       Q.sName + 
                       generateJoinConditions(Q, variables) +
                       "\n" }

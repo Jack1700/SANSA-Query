@@ -15,23 +15,31 @@ import org.apache.jena.sparql.syntax.ElementOptional
 
 object SparqlAnalyzer {
 
-  var subjects = new ArrayBuffer[String]();
-  var objects = new ArrayBuffer[String]();
-  var predicates = new ArrayBuffer[String]();
-  var optionalSubjects = new ArrayBuffer[String]();
-  var optionalObjects = new ArrayBuffer[String]();
-  var optionalPredicates = new ArrayBuffer[String]();
+  var subjects = new ArrayBuffer[String]
+  var objects = new ArrayBuffer[String]
+  var predicates = new ArrayBuffer[String]
+  
+  var optionalIndices = new ArrayBuffer[Integer]
 
-  var filterVariables = new ArrayBuffer[String]();
-  var filterValues = new ArrayBuffer[String]();
-  var filterOperators = new ArrayBuffer[String]();
+  var filterVariables = new ArrayBuffer[String]
+  var filterValues = new ArrayBuffer[String]
+  var filterOperators = new ArrayBuffer[String]
+  
+  
+  
+  def initialize(query: Query) : Unit = {
+    generateStringTriples(query)
+    generateFilter(query)
+    generateOptionals(query)
+  }  
+  
 
-  /*
+   /*
   Extracts all filters from the query
     
   Given: Sparql query
   */
-  def generateFilters(query: Query) : Unit = {
+  def generateFilter(query: Query) : Unit = {
 
     filterVariables.clear
     filterOperators.clear
@@ -48,49 +56,6 @@ object SparqlAnalyzer {
           filterOperators += el.charAt(1).toString();
           filterValues += el.split(" ")(2).substring(0, el.split(" ")(2).size - 1);
           filterVariables += variable.substring(2, variable.size - 1);
-        }
-      })
-  }
-
- 
-  /*
-  
-    
-  Given: 
-  */
-  def generateStringOptionalTriples(query: Query): Unit = {
-    optionalSubjects.clear;
-    optionalObjects.clear;
-    optionalPredicates.clear;
-
-    ElementWalker.walk(
-      query.getQueryPattern(),
-      new ElementVisitorBase() {
-
-        override def visit(el: ElementOptional): Unit = {
-
-          val triple = el.getOptionalElement
-          println(triple)
-          //            val subject = //triple.getSubject().toString()
-          //            val Object = //triple.getObject().toString();
-          //            val predicate = triple.getPredicate().toString();
-          //
-          //            if (subject(0) == '?')
-          //              subjects += subject.substring(1)
-          //            else
-          //              subjects += "\"" + subject + "\""
-          //
-          //            if (Object(0) == '?')
-          //              objects += Object.substring(1)
-          //            else
-          //              objects += "\"" + Object + "\""
-          //
-          //            if (predicate(0) == '?')
-          //              predicates += predicate.substring(1)
-          //            else
-          //              predicates += "\"" + predicate + "\""
-          //
-          //          }
         }
       })
   }
@@ -135,6 +100,55 @@ object SparqlAnalyzer {
             else
               predicates += "\"" + predicate + "\""
 
+          }
+        }
+      })
+  }
+  
+  
+  /*
+  
+    
+  Given: 
+  */
+  def generateOptionals(query: Query) : Unit = {
+
+    optionalIndices.clear
+    
+    ElementWalker.walk(
+      query.getQueryPattern(),
+      new ElementVisitorBase() {
+
+        override def visit(el: ElementOptional): Unit = {
+
+          val tripleOptional = el.getOptionalElement.toString
+          val triple = tripleOptional.split(" ")
+          
+          var optionalSubject = triple(1)
+          var optionalPredicate = triple(3)
+          var optionalObject = triple(5)
+
+          
+          if (optionalSubject(0) == '?')
+            optionalSubject = optionalSubject.substring(1)
+          else
+            optionalSubject = "\"" + optionalSubject.substring(1, optionalSubject.size - 1) + "\""
+          
+          if (optionalObject(0) == '?')
+            optionalObject = optionalObject.substring(1)
+          else
+            optionalObject = "\"" + optionalObject.substring(1, optionalObject.size - 1) + "\""
+          
+          if (optionalPredicate(0) == '?')
+            optionalPredicate = optionalPredicate.substring(1)
+          else
+            optionalPredicate = "\"" + optionalPredicate.substring(1, optionalPredicate.size - 1) + "\""
+                    
+          var i = 0
+          for (i <- 0 until subjects.size) {
+            if ( subjects(i) == optionalSubject && objects(i) == optionalObject && predicates(i) == optionalPredicate ) {
+              optionalIndices += i
+            }
           }
         }
       })
