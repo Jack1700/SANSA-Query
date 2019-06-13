@@ -6,8 +6,7 @@ import org.apache.jena.query.{ QueryExecutionFactory, QuerySolutionMap, QueryFac
 
 
 class Interface {
-  
-  
+  val t = new HelperFunctions 
   /*
   Translates and executes a Sparql query tablewise in SQL and returns the dataframe
   
@@ -17,6 +16,10 @@ class Interface {
     
     val sqlQuery = Sparql2SqlTablewise(queryString)
     val dataframe = spark.sql(sqlQuery)
+    
+    println(t.getDataType(dataframe, "x"))
+    
+    
     
     return dataframe
   }

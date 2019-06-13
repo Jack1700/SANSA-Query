@@ -37,6 +37,8 @@ object SparqlAnalyzer {
     generateOptionals(query)
     generateOBvariables(query)
   }
+  
+  
   /*
   Extracts all Order By variables in order and saves them in orderByVariables as Strings
 
@@ -54,6 +56,8 @@ object SparqlAnalyzer {
     }
 
   }
+  
+  
   /*
   Extracts all triples from the query and saves them in three Arrays containing all subjects, objects and predicates from the BGPs
 

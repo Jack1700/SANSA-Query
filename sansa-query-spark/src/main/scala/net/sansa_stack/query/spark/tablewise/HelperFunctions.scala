@@ -7,7 +7,6 @@ import java.util.List
 import org.apache.spark.sql.DataFrame
 
 
-
 class HelperFunctions {
   
   
@@ -56,7 +55,7 @@ class HelperFunctions {
     
   Given: Variable; Array of variables
   */
-  def getTableWithVariable(variable: String, variables: ArrayBuffer[String]): String = {
+  def getTableWithVariable(variable: String, variables: ArrayBuffer[String]) : String = {
     
     for (v <- variables) {
       val str = v.split("\\.")
@@ -69,16 +68,34 @@ class HelperFunctions {
     return null
   }
   
-    def cleanDatatype(typedString: String): String = {
-    return typedString.split("\\^")(0)
-  }
-  def mapToTypedDF(df: DataFrame, columnNames: ArrayBuffer[String], columnTypes: ArrayBuffer[String]): Unit = {
-
-    import org.apache.spark.sql.functions._
-    for (column <- columnNames) {
-      df.select(col(column), substring_index(col(column), "\\^", 1).as(column))
-    }
-  }
+  
+  /*
+  Determines the implicit datatype of a given column in a given dataframe
+  
+  Given: Dataframe; Columnname
+   */
+  def getDataType(dataframe: DataFrame, columnName: String) : String = {
     
+    val amount = 10
+    val datatypes = ArrayBuffer ("integer", "decimal", "float", "double", "string", "boolean", "dateTime")
+    var datatype = ArrayBuffer.fill[Int](7){0}
+    var examples = dataframe.limit(amount).select(columnName).collect
+    
+    var i = 0
+    for(i <- 0 until examples.size) {
+      
+      var j = 0
+      for(j <- 0 until 7)
+        
+        if(examples(i).apply(0).toString.contains(datatypes(j))) {
+          datatype(j) += 1
+        }
+    }
+    
+    
+    
+    return datatypes(datatype.indexOf(datatype.max))
+  }
+  
     
 }
