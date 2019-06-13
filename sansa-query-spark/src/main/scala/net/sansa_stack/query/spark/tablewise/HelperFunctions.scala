@@ -4,6 +4,8 @@ import scala.collection.mutable.Queue
 import org.apache.jena.sparql.core.Var
 import scala.collection.mutable.ArrayBuffer
 import java.util.List
+import org.apache.spark.sql.DataFrame
+
 
 
 class HelperFunctions {
@@ -65,6 +67,17 @@ class HelperFunctions {
     }
     
     return null
+  }
+  
+    def cleanDatatype(typedString: String): String = {
+    return typedString.split("\\^")(0)
+  }
+  def mapToTypedDF(df: DataFrame, columnNames: ArrayBuffer[String], columnTypes: ArrayBuffer[String]): Unit = {
+
+    import org.apache.spark.sql.functions._
+    for (column <- columnNames) {
+      df.select(col(column), substring_index(col(column), "\\^", 1).as(column))
+    }
   }
     
     
