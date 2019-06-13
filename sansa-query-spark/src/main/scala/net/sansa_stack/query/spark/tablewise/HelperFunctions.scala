@@ -77,8 +77,8 @@ class HelperFunctions {
   def getDataType(dataframe: DataFrame, columnName: String) : String = {
     
     val amount = 10
-    val datatypes = ArrayBuffer {"integer"; "decimal"; "float"; "double"; "string"; "boolean"; "dateTime"}
-    var datatype = ArrayBuffer.fill(7){0}
+    val datatypes = ArrayBuffer ("integer", "decimal", "float", "double", "string", "boolean", "dateTime")
+    var datatype = ArrayBuffer.fill[Int](7){0}
     var examples = dataframe.limit(amount).select(columnName).collect
     
     var i = 0

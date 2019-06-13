@@ -17,7 +17,7 @@ class Interface {
     val sqlQuery = Sparql2SqlTablewise(queryString)
     val dataframe = spark.sql(sqlQuery)
     
-    t.getDataType(dataframe, "x")
+    println(t.getDataType(dataframe, "x"))
     
     
     
