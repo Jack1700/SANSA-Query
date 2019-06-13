@@ -167,7 +167,7 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
 
     // Executes the Translator
     val result = OurProgram.createQueryExecution(spark, fileContents)
-    //println(OurProgram.Sparql2SqlTablewise(fileContents))
+    println(OurProgram.Sparql2SqlTablewise(fileContents))
 
     // Compares both results
     println("Sparql: " + r.getRowNumber)
@@ -192,6 +192,7 @@ class Sparql2SqlTablewiseTest extends FunSuite with DataFrameSuiteBase {
                                         org.apache.jena.graph.NodeFactory.createBlankNode(o)) })
  
     val df = triples.toDF
+    
     // Extracts the query from the test resources
     val queryPath = "src/test/resources/queries/bsbm/Q_FILTER3.sparql"
     val fileContents = Source.fromFile(queryPath).getLines.mkString
