@@ -90,11 +90,12 @@ class HelperFunctions {
     return datatypes(datatype.indexOf(datatype.max))
   }
 
-  def mapToTypedDF(df: DataFrame, columnNames: ArrayBuffer[String], columnTypes: ArrayBuffer[String]): Unit = {
+  def mapToTypedDF(df: DataFrame, columnNames: ArrayBuffer[String], columnTypes: ArrayBuffer[String]): DataFrame = {
 
     import org.apache.spark.sql.functions._
     for (column <- columnNames) {
       df.select(col(column), substring_index(col(column), "\\^", 1).as(column))
     }
+    df
   }
 }

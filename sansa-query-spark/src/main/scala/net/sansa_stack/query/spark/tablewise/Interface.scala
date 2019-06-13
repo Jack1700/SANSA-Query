@@ -3,6 +3,8 @@ package net.sansa_stack.query.spark.tablewise
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.DataFrame
 import org.apache.jena.query.{ QueryExecutionFactory, QuerySolutionMap, QueryFactory }
+import scala.collection.mutable.ArrayBuffer
+
 
 
 class Interface {
@@ -17,11 +19,16 @@ class Interface {
     val sqlQuery = Sparql2SqlTablewise(queryString)
     val dataframe = spark.sql(sqlQuery)
     
-    println(t.getDataType(dataframe, "x"))
+    var types = new ArrayBuffer[String]
+    for(column <- SparqlAnalyzer.orderByVariables) {
+      types += t.getDataType(dataframe, column)
+    }
     
+    val dataframe2 = t.mapToTypedDF(dataframe, SparqlAnalyzer.orderByVariables, types)    
     
+    dataframe2.collect.foreach(println)
     
-    return dataframe
+    return dataframe2
   }
   
   
