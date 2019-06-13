@@ -1,0 +1,4 @@
+SELECT ?product
+	WHERE { 
+   ?product <http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/vocabulary/productPropertyNumeric1> ?value1 .
+ } ORDER BY ?value1
